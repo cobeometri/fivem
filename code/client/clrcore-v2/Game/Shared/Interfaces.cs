@@ -59,4 +59,35 @@ namespace CitizenFX.Core
 
 		public abstract void Delete();
 	}
+
+#if MONO_V2 && !IS_RDR3
+	// Fallback stubs for local builds where FiveM v1 linked sources are unavailable.
+	public sealed class Ped : PoolObject
+	{
+		public Ped(int handle) : base(handle) { }
+		public override bool Exists() => Handle != 0;
+		public override void Delete() => Handle = 0;
+	}
+
+	public sealed class Prop : PoolObject
+	{
+		public Prop(int handle) : base(handle) { }
+		public override bool Exists() => Handle != 0;
+		public override void Delete() => Handle = 0;
+	}
+
+	public sealed class Pickup : PoolObject
+	{
+		public Pickup(int handle) : base(handle) { }
+		public override bool Exists() => Handle != 0;
+		public override void Delete() => Handle = 0;
+	}
+
+	public sealed class Vehicle : PoolObject
+	{
+		public Vehicle(int handle) : base(handle) { }
+		public override bool Exists() => Handle != 0;
+		public override void Delete() => Handle = 0;
+	}
+#endif
 }
