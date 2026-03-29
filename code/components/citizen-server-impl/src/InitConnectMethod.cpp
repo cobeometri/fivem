@@ -55,6 +55,10 @@
 
 #include "CnlEndpoint.h"
 
+#ifndef TICKET_VERIFY_ENDPOINT
+#define TICKET_VERIFY_ENDPOINT "https://api.grandrp.vn/api"
+#endif
+
 using json = nlohmann::json;
 
 static std::forward_list<fx::ServerIdentityProviderBase*> g_serverProviders;

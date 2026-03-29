@@ -7,7 +7,7 @@ import { masterListFullServerData2ServerView, masterListServerData2ServerView } 
 import { IFullServerData, IServerView } from '../../types';
 import { decodeServer } from '../api/api';
 
-const BASE_URL = 'https://frontend.cfx-services.net/api/servers';
+const BASE_URL = 'https://content.grandrp.vn/api/servers';
 const ALL_SERVERS_URL = `${BASE_URL}/streamRedir/`;
 const SINGLE_SERVER_URL = `${BASE_URL}/single/`;
 

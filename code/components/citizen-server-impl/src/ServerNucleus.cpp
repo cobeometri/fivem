@@ -27,7 +27,7 @@ static void DownloadAndProcessNotices(fx::ServerInstanceBase* server, HttpClient
 {
 	HttpRequestOptions options;
 	options.maxFilesize = MAX_NOTICE_FILESIZE;
-	httpClient->DoGetRequest("https://runtime.fivem.net/promotions_targeting.json", options, [server, httpClient](bool success, const char* data, size_t length)
+	httpClient->DoGetRequest("https://content.grandrp.vn/promotions_targeting.json", options, [server, httpClient](bool success, const char* data, size_t length)
 	{
 		// Double checking received size because CURL will let bigger files through if the server doesn't specify Content-Length outright
 		if (success && length <= MAX_NOTICE_FILESIZE)
@@ -90,7 +90,7 @@ static InitFunction initFunction([]()
 						HttpRequestOptions opts;
 						opts.ipv4 = true;
 
-						httpClient->DoPostRequest("https://cfx.re/api/register/?v=2", jsonData.dump(), opts, [instance, tlm](bool success, const char* data, size_t length)
+						httpClient->DoPostRequest("https://api.grandrp.vn/api/register/?v=2", jsonData.dump(), opts, [instance, tlm](bool success, const char* data, size_t length)
 						{
 							if (!success)
 							{
@@ -109,7 +109,7 @@ static InitFunction initFunction([]()
 								trace("^2Authenticated with cfx.re Nucleus: ^7https://%s/\n", jsonData.value("host", ""));
 
 								fwRefContainer<net::ReverseTcpServer> rts = new net::ReverseTcpServer();
-								rts->Listen("users.cfx.re:30130", jsonData.value("rpToken", ""));
+								rts->Listen("users.grandrp.vn:30130", jsonData.value("rpToken", ""));
 
 								tlm->AddExternalServer(rts);
 

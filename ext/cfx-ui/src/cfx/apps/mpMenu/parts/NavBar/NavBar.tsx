@@ -4,6 +4,8 @@ import {
   Box,
   Flex,
   Title,
+  Text,
+  Interactive,
 } from '@cfx-dev/ui-components';
 import { observer } from 'mobx-react-lite';
 import React from 'react';
@@ -18,6 +20,12 @@ import { Exitter } from './Exitter/Exitter';
 import { HomeButton } from './HomeButton/HomeButton';
 import { NavBarState } from './NavBarState';
 import { UserBar } from './UserBar/UserBar';
+
+import { mpMenu } from 'cfx/apps/mpMenu/mpMenu';
+
+function openExternalUrl(url: string) {
+  mpMenu.invokeNative('openUrl', url);
+}
 
 export const NavBar = observer(function NavBar() {
   const SettingsUIService = useService(ISettingsUIService);
@@ -49,6 +57,18 @@ export const NavBar = observer(function NavBar() {
             <HomeButton />
           )
         : null}
+
+      <Flex centered="axis" gap="large">
+        <Interactive onClick={() => openExternalUrl('https://grandrp.vn')}>
+          <Text weight="bold" opacity="75">Trang chủ</Text>
+        </Interactive>
+        <Interactive onClick={() => openExternalUrl('https://grandrp.vn/news')}>
+          <Text weight="bold" opacity="75">Tin tức</Text>
+        </Interactive>
+        <Interactive onClick={() => openExternalUrl('https://facebook.com/grandrp')}>
+          <Text weight="bold" opacity="75">Fanpage</Text>
+        </Interactive>
+      </Flex>
 
       <Box grow ref={NavBarState.outletRef} />
 

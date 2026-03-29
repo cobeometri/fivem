@@ -51,7 +51,7 @@
 #include "FormData.h"
 #include "Frame.h"
 
-constexpr const char kDefaultServerList[] = "https://servers-frontend.fivem.net/api/serverlist/ingress";
+constexpr const char kDefaultServerList[] = "https://content.grandrp.vn/server/ingress";
 
 static fx::GameServer* g_gameServer;
 
