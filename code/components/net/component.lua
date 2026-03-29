@@ -3,7 +3,7 @@ links { "ws2_32" }
 return function()
 	filter {}
 	
-	add_dependencies { 'legitimacy' }
+	add_dependencies { 'ros-patches' }
 
 	if _OPTIONS["game"] == 'ny' then
 		add_dependencies {

@@ -1,17 +1,17 @@
-import { GameName } from 'cfx/base/game';
+import { GameName } from "cfx/base/game";
 
 const gameBrandMap = {
-  [GameName.FiveM]: 'FiveM',
-  [GameName.RedM]: 'RedM',
-  [GameName.LibertyM]: 'LibertyM',
+  [GameName.FiveM]: "GRAND ROLEPLAY",
+  [GameName.RedM]: "RedM",
+  [GameName.LibertyM]: "LibertyM",
 };
 function getGameBrand(gameName: GameName): string {
-  return gameBrandMap[gameName] || 'CitizenFX';
+  return gameBrandMap[gameName] || "CitizenFX";
 }
 
 const gameProtocolMap = {
-  [GameName.FiveM]: 'fivem',
-  [GameName.RedM]: 'redm',
+  [GameName.FiveM]: "fivem",
+  [GameName.RedM]: "redm",
 };
 function getGameProtocol(gameName: GameName): string | undefined {
   return gameProtocolMap[gameName];
@@ -24,9 +24,9 @@ export let CurrentGameBrand = getGameBrand(CurrentGameName);
 // eslint-disable-next-line import/no-mutable-exports
 export let CurrentGameProtocol = getGameProtocol(CurrentGameName);
 // eslint-disable-next-line import/no-mutable-exports
-export let CurrentGameBuild = '-1';
+export let CurrentGameBuild = "-1";
 // eslint-disable-next-line import/no-mutable-exports
-export let CurrentGamePureLevel = '-1';
+export let CurrentGamePureLevel = "-1";
 
 export function currentGameNameIs(gameName: GameName): boolean {
   return CurrentGameName === gameName;

@@ -1,4 +1,4 @@
-import { Flex, Icon, Icons, Text, Title } from '@cfx-dev/ui-components';
+import { Flex, Icons, Title } from '@cfx-dev/ui-components';
 import { observer } from 'mobx-react-lite';
 
 import { $L } from 'cfx/common/services/intl/l10n';
@@ -29,26 +29,22 @@ export const ServerPower = observer(function ServerPower(props: ServerPowerProps
     <Flex centered="axis" className={className}>
       {hasUpvote && (
         <Title fixedOn="bottom" title={$L('#Server_BoostPower_Title')}>
-          <Flex centered gap="small">
-            <Icon className={s.upvoteIcon}>
+          <Flex centered gap="thin">
+            <span className={s.upvoteIcon}>
               {Icons.upvotesRecurring}
-            </Icon>
-            <Text size="normal" opacity="75">
-              {server.upvotePower}
-            </Text>
+            </span>
+            <span>{server.upvotePower}</span>
           </Flex>
         </Title>
       )}
 
       {hasBurst && (
         <Title fixedOn="bottom" title={$L('#Server_BurstPower_Title')}>
-          <Flex centered gap="small">
-            <Icon className={s.burstIcon}>
+          <Flex centered gap="thin">
+            <span className={s.burstIcon}>
               {Icons.upvotesBurst}
-            </Icon>
-            <Text size="normal" opacity="75">
-              {server.burstPower}
-            </Text>
+            </span>
+            <span>{server.burstPower}</span>
           </Flex>
         </Title>
       )}

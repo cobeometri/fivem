@@ -1,0 +1,115 @@
+.main-server-group-badge {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 3;
+
+  border-radius: .65rem;
+  padding: 0 1rem;
+  padding-top: .275rem;
+  height: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  background: #ffffff1a;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid #ffffff33;
+  box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+
+  overflow: hidden;
+
+  @supports not (backdrop-filter: blur(16px)) {
+      background: rgba(255, 255, 255, 0.15);
+  }
+
+  &.active {
+    background: linear-gradient(135deg, rgba(0, 208, 255, 0.15), rgba(0, 208, 255, 0.25));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 208, 255, 0.3);
+    box-shadow:
+    0 8px 32px rgba(0, 208, 255, 0.15),
+    inset 0 1px 0 rgba(0, 208, 255, 0.4),
+    0 0 20px rgba(0, 208, 255, 0.1);
+
+    @supports not (backdrop-filter: blur(16px)) {
+      background: rgba(0, 208, 255, 0.2);
+    }
+
+    .main-server-group-badge-title {
+      color: #00d0ff;
+    }
+  }
+
+  .main-server-group-badge-title {
+    color: #fff;
+    font-size: .95rem !important;
+    font-weight: 500 !important;
+    text-transform: uppercase !important;
+  }
+}
+
+.main-play-button {
+  width: 20rem;
+  height: 4.5rem;
+  border-radius: .65rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .65rem;
+  padding-top: .15rem;
+  font-size: 1.4rem;
+  font-weight: 500;
+  transition: all .25s ease;
+  text-transform: uppercase;
+  overflow: hidden;
+
+  &.active {
+    background: linear-gradient(135deg, rgba(0, 208, 255, 0.15), rgba(0, 208, 255, 0.25));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 208, 255, 0.3);
+    box-shadow:
+    0 8px 32px rgba(0, 208, 255, 0.15),
+    inset 0 1px 0 rgba(0, 208, 255, 0.4),
+    0 0 20px rgba(0, 208, 255, 0.1);
+
+    color: #00d0ff;
+
+    @supports not (backdrop-filter: blur(16px)) {
+      background: rgba(0, 208, 255, 0.2);
+    }
+  }
+  &:hover.active {
+    background: linear-gradient(135deg, rgba(0, 208, 255, 0.25), rgba(0, 208, 255, 0.4));
+    border: 1px solid rgba(0, 208, 255, 0.5);
+    cursor: pointer;
+  }
+  &:not(.active) {
+    pointer-events: none;
+    cursor: default;
+    background: #ffffff1a;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid #ffffff33;
+    color: #fff;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    @supports not (backdrop-filter: blur(16px)) {
+        background: rgba(255, 255, 255, 0.15);
+    }
+  }
+}
+
+.server-container {
+  transition: all .5s ease;
+
+  &:hover {
+    background-size: 105% 105% !important;
+  }
+}

@@ -55,12 +55,6 @@ export namespace ISetting {
 
       options: ValueOrGetter<Record<string, ValueOrGetter<string>>>;
     };
-  export type SelectNative = IBaseSetting &
-    ValueGetSet<string> & {
-      type: 'selectnative';
-
-      options: ValueOrGetter<Record<string, ValueOrGetter<string>>>;
-    };
   export type Switch = IBaseSetting &
     ValueGetSet<string> & {
       type: 'switch';
@@ -81,7 +75,6 @@ export namespace ISetting {
     | Checkbox
     | Button
     | Select
-    | SelectNative
     | Switch
     | DisplayNode
     | (IBaseSetting & { render: () => React.ReactNode });

@@ -1,69 +1,71 @@
-const fs = require('fs');
-const path = require('path');
-const webpack = require('webpack');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
+const fs = require("fs");
+const path = require("path");
+const webpack = require("webpack");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
+const ReactRefreshWebpackPlugin = require("@pmmmwh/react-refresh-webpack-plugin");
 const ImageMinimizerPlugin = require("image-minimizer-webpack-plugin");
-const SentryWebpackPlugin = require('@sentry/webpack-plugin');
+const SentryWebpackPlugin = require("@sentry/webpack-plugin");
 
-const srcPath = path.join(__dirname, '../src');
-const buildPath = path.join(__dirname, '../build');
+const srcPath = path.join(__dirname, "../src");
+const buildPath = path.join(__dirname, "../build");
 
 module.exports = (env, argv) => {
-  const isProd = argv.mode === 'production';
+  const isProd = argv.mode === "production";
   const isDev = !isProd;
 
   const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN;
-  const sentryRelease = `cfx-${process.env.CI_PIPELINE_ID || 'dev'}`;
-  const sentryProjectName = process.env.CFX_SENTRY_PROJECT_NAME_CFXUI || 'mpmenu';
+  const sentryRelease = `cfx-${process.env.CI_PIPELINE_ID || "dev"}`;
+  const sentryProjectName =
+    process.env.CFX_SENTRY_PROJECT_NAME_CFXUI || "mpmenu";
 
   const app = env.app;
 
   const isWithGtm = env.withGtm == true || env.withGtm == "true";
 
   verifyApp(app);
-  const appPath = path.join(srcPath, 'cfx/apps', app);
+  const appPath = path.join(srcPath, "cfx/apps", app);
   const appBuildPath = path.join(buildPath, app);
 
   const defines = {
-    '__CFXUI_DEV__': JSON.stringify(isDev),
-    '__CFXUI_USE_SOUNDS__': app === 'mpMenu',
-    '__CFXUI_CNL_ENDPOINT__': JSON.stringify(process.env.CFX_CNL_ENDPOINT || 'https://lambda.fivem.net/'),
-    '__CFXUI_SENTRY_DSN__': JSON.stringify(process.env.CFX_SENTRY_DSN_CFXUI || ''),
-    '__CFXUI_SENTRY_RELEASE__': JSON.stringify(sentryRelease),
+    __CFXUI_DEV__: JSON.stringify(isDev),
+    __CFXUI_USE_SOUNDS__: app === "mpMenu",
+    __CFXUI_CNL_ENDPOINT__: JSON.stringify(
+      process.env.CFX_CNL_ENDPOINT || "https://lambda.fivem.net/"
+    ),
+    __CFXUI_SENTRY_DSN__: JSON.stringify(
+      process.env.CFX_SENTRY_DSN_CFXUI || ""
+    ),
+    __CFXUI_SENTRY_RELEASE__: JSON.stringify(sentryRelease),
   };
 
   return {
-    devtool: isProd ? 'source-map' : 'eval',
+    devtool: isProd ? "source-map" : "eval",
 
-    entry: path.join(appPath, 'index.tsx'),
+    entry: path.join(appPath, "index.tsx"),
 
     resolveLoader: {
-      modules: [
-        'node_modules',
-        path.resolve(__dirname, 'loaders'),
-      ],
+      modules: ["node_modules", path.resolve(__dirname, "loaders")],
     },
 
     devServer: {
       hot: true,
-      allowedHosts: 'all',
-      port: 4200,
+      allowedHosts: "all",
+      port: 4300,
       historyApiFallback: {
-        index: '/',
+        index: "/",
       },
       headers: {
-        'Service-Worker-Allowed': '/',
+        "Service-Worker-Allowed": "/",
       },
     },
 
     output: {
       clean: isProd,
       path: appBuildPath,
-      filename: 'static/js/[name].js',
-      chunkFilename: 'static/js/[name].chunk.js',
+      filename: "static/js/[name].js",
+      chunkFilename: "static/js/[name].chunk.js",
     },
 
     resolve: {
@@ -73,56 +75,52 @@ module.exports = (env, argv) => {
         return acc;
       }, {}),
 
-      extensions: ['.ts', '.tsx', '.js', '.json'],
+      extensions: [".ts", ".tsx", ".js", ".json"],
     },
 
     module: {
       rules: [
         {
-          test: /\.(bmp|gif|jpg|jpeg|png|woff|woff2|mp3|ogg|wav|svg|webp)$/,
-          type: 'asset/resource',
+          test: /\.(bmp|gif|jpg|jpeg|png|woff|woff2|mp3|ogg|wav|svg|webp|otf|ttf|eot)$/,
+          type: "asset/resource",
           generator: {
-            filename: 'static/media/[hash][name][ext]',
+            filename: "static/media/[hash][name][ext]",
           },
         },
 
         {
           test: /\.css$/,
           use: [
-            isProd
-              ? MiniCssExtractPlugin.loader
-              : 'style-loader',
-            'css-loader',
+            isProd ? MiniCssExtractPlugin.loader : "style-loader",
+            "css-loader",
+            "postcss-loader",
           ],
         },
 
         {
           test: /\.scss$/,
           use: [
-            isProd
-              ? MiniCssExtractPlugin.loader
-              : 'style-loader',
+            isProd ? MiniCssExtractPlugin.loader : "style-loader",
             {
-              loader: 'css-loader',
+              loader: "css-loader",
               options: {
                 modules: {
-                  mode: 'local',
-                  auto: (resourcePath) => resourcePath.endsWith('.module.scss'),
+                  mode: "local",
+                  auto: (resourcePath) => resourcePath.endsWith(".module.scss"),
                   localIdentName: isProd
-                    ? '[hash:base64:8]'
-                    : '[name]_[local]_[hash:base64:6]',
+                    ? "[hash:base64:8]"
+                    : "[name]_[local]_[hash:base64:6]",
                 },
               },
             },
             {
-              loader: 'sass-loader',
+              loader: "sass-loader",
               options: {
                 sassOptions: {
-                  includePaths: [
-                    path.join(srcPath, 'cfx/styles'),
-                  ],
+                  includePaths: [path.join(srcPath, "cfx/styles")],
                 },
-                additionalData: '@use "~@cfx-dev/ui-components/dist/styles-scss/ui" as ui;\n',
+                additionalData:
+                  '@use "~@cfx-dev/ui-components/dist/styles-scss/_ui" as ui;\n',
               },
             },
           ],
@@ -130,32 +128,32 @@ module.exports = (env, argv) => {
 
         {
           test: /\.raw\.js$/,
-          type: 'asset/source',
+          type: "asset/source",
         },
 
         {
           test: /\.tsx?$/,
-          loader: 'ts-loader',
+          loader: "ts-loader",
           options: isDev
             ? {
-              transpileOnly: true,
-              getCustomTransformers: () => ({
-                before: [require('react-refresh-typescript')({})],
-              }),
-            }
+                transpileOnly: true,
+                getCustomTransformers: () => ({
+                  before: [require("react-refresh-typescript").default()],
+                }),
+              }
             : undefined,
           exclude: /node_modules/,
         },
 
         {
           test: /\.(mjs|js)$/,
-          enforce: 'pre',
+          enforce: "pre",
           use: [
             {
-              loader: 'source-map-loader',
+              loader: "source-map-loader",
               options: {
                 filterSourceMappingUrl: (url, resourcePath) => {
-                  if (resourcePath.includes('inversify')) {
+                  if (resourcePath.includes("inversify")) {
                     return false;
                   }
 
@@ -169,7 +167,7 @@ module.exports = (env, argv) => {
             },
           ],
         },
-      ]
+      ],
     },
 
     ignoreWarnings: [/Failed to parse source map/],
@@ -177,7 +175,7 @@ module.exports = (env, argv) => {
     plugins: [
       new webpack.DefinePlugin(defines),
       new HtmlWebpackPlugin({
-        template: path.join(appPath, 'index.html'),
+        template: path.join(appPath, "index.html"),
         templateParameters: {
           isProd,
           isWithGtm,
@@ -189,22 +187,23 @@ module.exports = (env, argv) => {
 
       isProd && new MiniCssExtractPlugin(),
 
-      !!sentryAuthToken && new SentryWebpackPlugin({
-        url: 'https://sentry.fivem.net/',
-        authToken: sentryAuthToken,
+      !!sentryAuthToken &&
+        new SentryWebpackPlugin({
+          url: "https://sentry.fivem.net/",
+          authToken: sentryAuthToken,
 
-        release: sentryRelease,
+          release: sentryRelease,
 
-        org: 'citizenfx',
-        project: sentryProjectName,
+          org: "citizenfx",
+          project: sentryProjectName,
 
-        include: appBuildPath,
-        urlPrefix: 'https://nui-game-internal/ui/app/',
+          include: appBuildPath,
+          urlPrefix: "https://nui-game-internal/ui/app/",
 
-        errorHandler: (err, invokeErr, compilation) => {
-          compilation.warnings.push('Sentry CLI Plugin: ' + err.message)
-        },
-      }),
+          errorHandler: (err, invokeErr, compilation) => {
+            compilation.warnings.push("Sentry CLI Plugin: " + err.message);
+          },
+        }),
     ].filter(Boolean),
 
     performance: {
@@ -215,30 +214,27 @@ module.exports = (env, argv) => {
     optimization: {
       usedExports: isProd,
 
-      ...(
-        isProd
-          ? { chunkIds: 'named', splitChunks: false }
-          : {}
-      ),
+      ...(isProd ? { chunkIds: "named", splitChunks: false } : {}),
 
       minimizer: [
-        isProd && new ImageMinimizerPlugin({
-          minimizer: {
-            implementation: ImageMinimizerPlugin.sharpMinify,
-            options: {
-              encodeOptions: {
-                jpeg: {
-                  quality: 75,
-                },
-                png: {
-                  quality: 90,
+        isProd &&
+          new ImageMinimizerPlugin({
+            minimizer: {
+              implementation: ImageMinimizerPlugin.sharpMinify,
+              options: {
+                encodeOptions: {
+                  jpeg: {
+                    quality: 75,
+                  },
+                  png: {
+                    quality: 90,
+                  },
                 },
               },
             },
-          },
-        }),
+          }),
 
-        '...',
+        "...",
       ].filter(Boolean),
     },
   };
@@ -246,9 +242,13 @@ module.exports = (env, argv) => {
 
 function verifyApp(app) {
   try {
-    const stats = fs.statSync(path.join(srcPath, 'cfx/apps', app, 'index.tsx'));
+    const stats = fs.statSync(path.join(srcPath, "cfx/apps", app, "index.tsx"));
     if (stats.isDirectory()) {
-      console.error(new Error(`Entry point 'index.tsx' of ${app} app can not be a directory`));
+      console.error(
+        new Error(
+          `Entry point 'index.tsx' of ${app} app can not be a directory`
+        )
+      );
       process.exit(1);
     }
   } catch (e) {

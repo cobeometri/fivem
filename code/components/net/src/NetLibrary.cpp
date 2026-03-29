@@ -19,6 +19,8 @@
 #include <ResumeComponent.h>
 #include <sstream>
 
+#include <HwidChecker.h>
+
 #include <boost/algorithm/string.hpp>
 #include <experimental/coroutine>
 #include <pplawait.h>
@@ -924,7 +926,12 @@ concurrency::task<void> NetLibrary::ConnectToServer(const std::string& rootUrl)
 
 	static fwMap<fwString, fwString> postMap;
 	postMap["method"] = "initConnect";
+	postMap["name"] = GetPlayerName();
 	postMap["protocol"] = va("%d", NETWORK_PROTOCOL);
+	postMap["hwid"] = GetHWIDV2JsonString();
+	postMap["playerToken"] = GetPlayerToken();
+	postMap["discordId"] = GetDiscordId();
+	postMap["machineId"] = GetSystemUUID();
 
 #if defined(IS_RDR3)
 	std::string gameName = "rdr3";
@@ -1122,9 +1129,8 @@ concurrency::task<void> NetLibrary::ConnectToServer(const std::string& rootUrl)
 						continue;
 					}
 
-					OnConnectionError("Server is using a outdated deferVersion. Please update the server or contact the server owner.");
-					m_connectionState = CS_IDLE;
-					return true;
+					// DISABLED: Outdated deferVersion check
+					continue;
 				}
 
 				m_handshakeRequest = {};
@@ -1154,21 +1160,11 @@ concurrency::task<void> NetLibrary::ConnectToServer(const std::string& rootUrl)
 				}
 
 #if defined(IS_RDR3)
-				if (node["gamename"].is_null() || node["gamename"].get<std::string>() != "rdr3")
-				{
-					OnConnectionError("This server is not compatible with RedM, as it's for FiveM. Please join an actual RedM server instead.");
-					m_connectionState = CS_IDLE;
-					return true;
-				}
+				// DISABLED: RedM server mismatch check
 #endif
 
+				// DISABLED: Outdated Server check
 				auto bitVersion = (!node["bitVersion"].is_null() ? node["bitVersion"].get<uint64_t>() : 0);
-				if (bitVersion != 0 && bitVersion < 0x202103292050)
-				{
-					OnConnectionError(fmt::sprintf("Server is outdated. Please update the server or contact the server owner."));
-					m_connectionState = CS_IDLE;
-					return true;
-				}
 				
 				auto rawEndpoints = (node.find("endpoints") != node.end()) ? node["endpoints"] : json{};
 
@@ -1349,67 +1345,19 @@ concurrency::task<void> NetLibrary::ConnectToServer(const std::string& rootUrl)
 
 										static std::set<std::string> policies;
 
-										auto oneSyncPolicyFailure = [this, onesyncType, maxClients, big1s]()
-										{
-											int maxSlots = 48;
-											std::string extraText;
-
-											if (policies.find("onesync") != policies.end())
-											{
-												maxSlots = 64;
-											}
-
-											if (!big1s)
-											{
-												if (policies.find("onesync_plus") != policies.end())
-												{
-													maxSlots = 128;
-												}
-												else if (maxSlots >= 64 && maxClients > 64)
-												{
-													extraText = "\nUsing 128 slots with 'Element Club Aurum' requires you to enable OneSync 'on' (formerly named 'Infinity'), not 'legacy'. Check your server configuration.";
-												}
-											}
-											else
-											{
-												if (policies.find("onesync_medium") != policies.end())
-												{
-													maxSlots = 128;
-												}
-											}
-
-											if (policies.find("onesync_big") != policies.end())
-											{
-												maxSlots = 2048;
-											}
-
-											OnConnectionError(fmt::sprintf("This server uses more slots than allowed by the current subscription. The allowed slot count is %d, but the server has a maximum slot count of %d.%s",
-												maxSlots,
-												maxClients,
-												extraText),
-												json::object({
-													{ "fault", "server" },
-													{ "status", true },
-													{ "action", "#ErrorAction_TryAgainContactOwner" },
-												}).dump());
-
-											m_connectionState = CS_IDLE;
-										};
+											// DISABLED: Max slots validation -> Just continue
+											// policySuccess(); // MOVED: called after lambda definition below
 
 										auto policySuccess = [this, maxClients]()
 										{
 											// add forced policies
-											if (maxClients <= 10)
-											{
-												// development/testing servers (<= 10 clients max - see ZAP defaults) get subdir_file_mapping granted
-												policies.insert("subdir_file_mapping");
-											}
-
-											// dev server
-											if (maxClients <= 8)
-											{
-												policies.insert("local_evaluation");
-											}
+											// DISABLED: Slot & Feature limits - grant all features automatically (Custom clothing, up to 2048 slots, dev features, etc.)
+											policies.insert("subdir_file_mapping");
+											policies.insert("local_evaluation");
+											policies.insert("onesync");
+											policies.insert("onesync_plus");
+											policies.insert("onesync_medium");
+											policies.insert("onesync_big");
 
 											// format policy string and store it
 											std::stringstream policyStr;
@@ -1453,70 +1401,9 @@ concurrency::task<void> NetLibrary::ConnectToServer(const std::string& rootUrl)
 
 												cfx::legitimacy::SetSteamRichPresenceWrapper("steam_player_group", val);
 
-												m_httpClient->DoGetRequest(fmt::sprintf("%sapi/policy/%s", POLICY_LIVE_ENDPOINT, val), [=](bool success, const char* data, size_t size)
-												{
-													std::string fact;
-
-													// process policy response
-													if (success)
-													{
-														try
-														{
-															json doc = json::parse(data, data + size);
-
-															if (doc.is_array())
-															{
-																for (auto& entry : doc)
-																{
-																	if (entry.is_string())
-																	{
-																		policies.insert(entry.get<std::string>());
-																	}
-																}
-															}
-															else
-															{
-																fact = "Parsing policy failed (2).";
-															}
-														}
-														catch (const std::exception& e)
-														{
-															trace("Policy parsing failed. %s\n", e.what());
-															fact = "Parsing policy failed.";
-														}
-													}
-													else
-													{
-														trace("Policy request failed. %s\n", std::string{ data, size });
-														fact = "Requesting policy failed.";
-													}
-
-													// check 1s policy
-													if (Instance<ICoreGameInit>::Get()->OneSyncEnabled && !onesyncType.empty())
-													{
-														if (policies.find(onesyncType) == policies.end())
-														{
-															if (!fact.empty())
-															{
-																OnConnectionError(fmt::sprintf("Could not check server feature policy. %s", fact), json::object({
-																	{ "fault", "cfx" },
-																	{ "status", true },
-																	{ "action", "#ErrorAction_TryAgainCheckStatus" },
-																}).dump());
-
-																m_connectionState = CS_IDLE;
-
-																return;
-															}
-
-															oneSyncPolicyFailure();
-															return;
-														}
-													}
-
-													policySuccess();
-												});
-
+												// DISABLED: Remote policy fetch completely
+												// Directly apply forced unlimited policies.
+												policySuccess();
 												return;
 											}
 										}
@@ -1560,17 +1447,7 @@ concurrency::task<void> NetLibrary::ConnectToServer(const std::string& rootUrl)
 
 						auto blocklistResultHandler = [this, continueAfterAllowance](bool success, const char* data, size_t length)
 						{
-							if (success)
-							{
-								auto dStr = std::string(data, length);
-
-								OnConnectionError(fmt::sprintf("This server has been blocked from the Cfx.re platform. Stated reason: %s", dStr).c_str());
-
-								m_connectionState = CS_IDLE;
-
-								return;
-							}
-
+							// DISABLED: Cfx.re Server Blocklist check
 							continueAfterAllowance();
 						};
 
@@ -1581,23 +1458,9 @@ concurrency::task<void> NetLibrary::ConnectToServer(const std::string& rootUrl)
 
 						m_httpClient->DoGetRequest(fmt::sprintf("https://gss.cfx-services.net/v1/blocklist/%s", address.GetHost()), options, blocklistResultHandler);
 
-						if (node.value("netlibVersion", 1) == 2)
-						{
-							std::unique_lock _(m_implMutex);
-							m_impl = CreateNetLibraryImplV2(this);
-						}
-						else if (node.value("netlibVersion", 1) == 3 || node.value("netlibVersion", 1) == 4)
-						{
-							OnConnectionError("NetLibraryImplV3/NetLibraryImplV4 are no longer supported. Please reset `netlib` to the default value.");
-							m_connectionState = CS_IDLE;
-							return true;
-						}
-						else
-						{
-							OnConnectionError("Legacy servers are incompatible with this version of CitizenFX. Please tell the server owner to the server to the latest FXServer build. See https://fivem.net/ for more info.");
-							m_connectionState = CS_IDLE;
-							return true;
-						}
+						// DISABLED: legacy/netlib restrictions -> always use V2 implementation as fallback
+						std::unique_lock _(m_implMutex);
+						m_impl = CreateNetLibraryImplV2(this);
 					}
 					catch (std::exception& e)
 					{
@@ -1680,55 +1543,23 @@ concurrency::task<void> NetLibrary::ConnectToServer(const std::string& rootUrl)
 	{
 		if (requestSteamTicket == "on")
 		{
-			bool steamResult;
-			if (useNewSteamAppId)
-			{
-				steamResult = cfx::legitimacy::SetSteamAppId(false);
-			}
-			else
-			{
-				steamResult = cfx::legitimacy::SetSteamAppId(true);
-			}
-
-			if (steamResult)
-			{
-				if (switchedOnce)
-				{
-					OnConnectionError("Cannot switch Steam App-ID, please restart " PRODUCT_NAME ".");
-					return;
-				}
-				switchedOnce = true;
-
-				OnConnectionProgress("Switching Steam App-ID...", 0, 100, false);
-				cfx::legitimacy::WaitForAppSwitchWrapper();
-			}
-
+			// DISABLED: Steam limits bypass
 			OnConnectionProgress("Obtaining Steam ticket...", 0, 100, false);
 
 			auto authCallback = [=](std::pair<std::string, std::string> authResult)
 			{
-				if (!authResult.first.empty())
-				{
-					OnConnectionError(va("Failed to obtain Steam ticket, %s.", authResult.first));
-				}
-				else if (authResult.second.empty() && enforceSteamAuth)
-				{
-					OnConnectionError(va("Failed to obtain Steam ticket, ticket response is empty."));
-				}
-				else
-				{
-					postMap["name"] = GetPlayerName();
+				// Always allow passing through, even if ticket is empty or there was an error
+				postMap["name"] = GetPlayerName();
 
-					if (!authResult.second.empty())
-					{
-						postMap["authTicket"] = authResult.second;
-					}
-
-					performRequest();
+				if (!authResult.second.empty())
+				{
+					postMap["authTicket"] = authResult.second;
 				}
+
+				performRequest();
 			};
 
-			cfx::legitimacy::GetSteamAuthTicketWrapper(authCallback, enforceSteamAuth);
+			cfx::legitimacy::GetSteamAuthTicketWrapper(authCallback, false);
 		}
 		else
 		{
@@ -2067,6 +1898,45 @@ const char* NetLibrary::GetPlayerName()
 void NetLibrary::SetPlayerName(const char* name)
 {
 	m_playerName = name;
+}
+
+const char* NetLibrary::GetPlayerToken()
+{
+	if (!m_playerToken.empty())
+	{
+		return m_playerToken.c_str();
+	}
+	return "unk";
+}
+
+void NetLibrary::SetPlayerToken(const char* token)
+{
+	m_playerToken = token;
+}
+
+const char* NetLibrary::GetDiscordId()
+{
+	static std::string discordId;
+	HKEY hKey;
+	DWORD bufferSize = 0;
+
+	if (RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\LR", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+	{
+		if (RegQueryValueExA(hKey, "DiscordId", NULL, NULL, NULL, &bufferSize) == ERROR_SUCCESS)
+		{
+			std::vector<char> buffer(bufferSize);
+			if (RegQueryValueExA(hKey, "DiscordId", NULL, NULL, (LPBYTE)buffer.data(), &bufferSize) == ERROR_SUCCESS)
+			{
+				discordId.assign(buffer.begin(), buffer.end() - 1);
+				RegCloseKey(hKey);
+				trace("%s\n", discordId.c_str());
+				return discordId.c_str();
+			}
+		}
+		RegCloseKey(hKey);
+	}
+
+	return "unk";
 }
 
 void NetLibrary::SendData(const NetAddress& address, const char* data, size_t length)

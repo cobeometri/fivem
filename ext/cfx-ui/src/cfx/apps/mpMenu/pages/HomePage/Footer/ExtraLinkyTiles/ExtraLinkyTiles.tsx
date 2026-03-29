@@ -1,6 +1,7 @@
-import { Flex, Icon, Icons, Symbols, Text } from '@cfx-dev/ui-components';
+import { Flex, Text } from '@cfx-dev/ui-components';
 import { observer } from 'mobx-react-lite';
 import React from 'react';
+import { FiServer } from 'react-icons/fi';
 
 import { GameName } from 'cfx/base/game';
 import { CurrentGameBrand, currentGameNameIs } from 'cfx/base/gameRuntime';
@@ -9,44 +10,40 @@ import { EventActionNames, ElementPlacements } from 'cfx/common/services/analyti
 
 import s from './ExtraLinkyTiles.module.scss';
 
-const analyticsCTAText = `Create a server Find out how to setup your own ${CurrentGameBrand} server!`;
-
 export const ExtraLinkyTiles = observer(function ExtraLinkyTiles() {
   const eventHandler = useEventHandler();
 
   const link = currentGameNameIs(GameName.RedM)
     ? 'https://redm.net/server-hosting'
     : 'https://fivem.net/server-hosting';
+  const title = 'Create a server';
+  const description = `Find out how to setup your own ${CurrentGameBrand} server!`;
 
   const handleClick = React.useCallback(() => {
     eventHandler({
       action: EventActionNames.HostCTA,
       properties: {
         element_placement: ElementPlacements.Footer,
-        text: analyticsCTAText,
+        text: `${title} ${description}`,
         link_url: link,
       },
     });
-  }, [eventHandler, link]);
+  }, [eventHandler, link, title, description]);
 
   return (
-    <Flex fullWidth fullHeight alignToEnd gap="large">
+    <Flex fullWidth alignToEnd gap="large">
       <a href={link} className={s.tile} onClick={handleClick}>
         <Flex gap="large">
-          <Flex>
-            <Flex vertical gap="normal">
-              <Text uppercase size="normal" weight="bold" opacity="75">
-                Create a server
-              </Text>
+          <div className={s.icon}>
+            <FiServer />
+          </div>
 
-              <Text typographic opacity="50">
-                Find out how to setup your own&nbsp;{CurrentGameBrand}&nbsp;server!
-              </Text>
-            </Flex>
+          <Flex vertical gap="small">
+            <Text size="xlarge" weight="bold" family="secondary" opacity="75">
+              {title}
+            </Text>
 
-            <Icon>
-              {Icons.externalLink}
-            </Icon>
+            <Text opacity="50">{description}</Text>
           </Flex>
         </Flex>
       </a>

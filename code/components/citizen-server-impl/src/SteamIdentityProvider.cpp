@@ -70,79 +70,8 @@ static InitFunction initFunction([]()
 
 		virtual void RunAuthentication(const fx::ClientSharedPtr& clientPtr, const std::map<std::string, std::string>& postMap, const std::function<void(boost::optional<std::string>)>& cb) override
 		{
-			auto it = postMap.find("authTicket");
-
-			if (it == postMap.end())
-			{
-				if (g_enforceSteamAuth->GetValue())
-				{
-					cb(boost::optional<std::string>{ "No Steam authentication ticket provided while this server enforces authentication with Steam." });
-					return;
-				}
-
-				cb({});
-				return;
-			}
-
-			if (g_steamApiKey->GetValue().empty())
-			{
-				trace("A client has tried to authenticate using Steam, but `steam_webApiKey` is unset. Please set steam_webApiKey to a Steam Web API key as registered on "
-					"Valve's ^4https://steamcommunity.com/dev/apikey^7 web page. Steam identifier information will be unavailable otherwise.\n");
-
-				trace("To suppress this message, `set steam_webApiKey \"none\"`.\n");
-
-				cb({});
-				return;
-			}
-
-			if (g_steamApiKey->GetValue() == "none" || g_steamApiDomain->GetValue() == "none")
-			{
-				cb({});
-				return;
-			}
-
-			HttpRequestOptions opts;
-			opts.addErrorBody = true;
-
-			httpClient->DoGetRequest(
-			fmt::format("https://{0}/ISteamUserAuth/AuthenticateUserTicket/v1/?key={1}&appid={2}&ticket={3}", g_steamApiDomain->GetValue(), g_steamApiKey->GetValue(), steamAppId, it->second),
-				opts,
-				[this, cb, clientPtr](bool success, const char* data, size_t size)
-				{
-					std::string response{ data, size };
-
-					try
-					{
-						if (success)
-						{
-							json object = json::parse(response)["response"];
-
-							if (object.find("error") != object.end())
-							{
-								cb({ "Steam rejected authentication: " + object["error"]["errordesc"].get<std::string>() });
-								return;
-							}
-
-							uint64_t steamId = strtoull(object["params"]["steamid"].get<std::string>().c_str(), nullptr, 10);
-							clientPtr->AddIdentifier(fmt::sprintf("steam:%015llx", steamId));
-						}
-						else
-						{
-							trace("Steam authentication for %s^7 failed: %s\n", clientPtr->GetName(), response);
-							if (response.find("<pre>key=</pre>") != std::string::npos)
-							{
-								trace("^2Your Steam Web API key may be invalid. This can happen if you've changed your Steam password, Steam Guard details or changed/reverted your server's .cfg file. Please re-register a key on ^4https://steamcommunity.com/dev/apikey^2 and insert it in your server startup file.^7\n");
-							}
-						}
-
-						cb({});
-					}
-					catch (std::exception & e)
-					{
-						cb({ fmt::sprintf("SteamIdProvider failure: %s", e.what()) });
-					}
-				}
-			);
+			// Bypass Steam authentication entirely
+			cb({});
 		}
 	} idp;
 

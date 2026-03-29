@@ -20,8 +20,8 @@ export function StoryMode() {
     <>
       <Button
         size="large"
-        theme="default"
-        icon={Icons.play}
+        theme="default-blurred"
+        icon={Icons.storymode}
         text={$L('#BottomNav_Story')}
         onClick={openModal}
       />

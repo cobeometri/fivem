@@ -19,7 +19,6 @@ import { ConnectState } from './connect/state';
 import { mpMenu } from '../../mpMenu';
 import { MpMenuEvents } from '../../mpMenu.events';
 import { IConvarService, KnownConvars } from '../convars/convars.service';
-import { LegalService } from '../legal/legal.service';
 
 export function registerMpMenuServersConnectService(container: ServicesContainer) {
   container.registerImpl(IServersConnectService, MpMenuServersConnectService);
@@ -34,9 +33,6 @@ class MpMenuServersConnectService implements IServersConnectService {
   @inject(IAnalyticsService)
   @optional()
   protected readonly analyticksSerivce: IAnalyticsService;
-
-  @inject(LegalService)
-  protected readonly legalService: LegalService;
 
   public get canConnect(): boolean {
     return this._server === null;
@@ -60,10 +56,8 @@ class MpMenuServersConnectService implements IServersConnectService {
           analyticsService.trackEvent({
             action: EventActionNames.CTAOther,
             properties: {
-              // eslint-disable-next-line camelcase
               element_placement: ElementPlacements.ServerConnect,
               text: `Connecting ${server.hostname} (${server.id})`,
-              // eslint-disable-next-line camelcase
               link_url: '',
             },
           });
@@ -189,10 +183,6 @@ class MpMenuServersConnectService implements IServersConnectService {
 
       return;
     }
-
-    // Wait for Legal Service clearance,
-    // otherwise user can initiate connection from the outside ignoring ToS acceptance
-    await this.legalService.clearance();
 
     this.resolvingServer = true;
     this.server = await this.resolveServer(serverOrAddress);

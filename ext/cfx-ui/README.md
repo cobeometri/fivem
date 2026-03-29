@@ -15,4 +15,4 @@ yarn serve
 yarn serve --env withGtm
 ```
 
-Then run the game with `+set ui_url http://localhost:4200/`.
+Then run the game with `+set ui_url http://localhost:4300/`.

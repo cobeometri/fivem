@@ -7,9 +7,10 @@ import { masterListFullServerData2ServerView, masterListServerData2ServerView } 
 import { IFullServerData, IServerView } from '../../types';
 import { decodeServer } from '../api/api';
 
-const BASE_URL = 'https://content.grandrp.vn/api/servers';
+const BASE_URL = 'https://servers-frontend.fivem.net/api/servers';
 const ALL_SERVERS_URL = `${BASE_URL}/streamRedir/`;
 const SINGLE_SERVER_URL = `${BASE_URL}/single/`;
+const TOP_SERVER_URL = `${BASE_URL}/top/`;
 
 async function readBodyToServers(
   gameName: GameName,
@@ -91,4 +92,43 @@ export async function getMasterListServer(gameName: GameName, address: string): 
   } catch (e) {
     return null;
   }
+}
+
+export interface TopServerConfig {
+  language: string;
+  gameName?: GameName;
+}
+interface TopServerResponse {
+  EP: string;
+  Data: IFullServerData;
+}
+export async function getTopServer(config: TopServerConfig): Promise<IServerView | null> {
+  try {
+    const response: TopServerResponse = await fetcher.json(TOP_SERVER_URL + config.language);
+    const srv = response.Data;
+
+    if (srv.EndPoint && srv.Data) {
+      const serverGameName = srv.Data?.vars?.gamename || GameName.FiveM;
+
+      if (config.gameName) {
+        if (serverGameName !== config.gameName) {
+          return null;
+        }
+      }
+
+      return masterListFullServerData2ServerView(srv.EndPoint, srv.Data);
+    }
+
+    return null;
+  } catch (e) {
+    console.error(e);
+
+    return null;
+  }
+}
+
+try {
+  (window as any).__getSingleServer = getMasterListServer;
+} catch (e) {
+  // Do nothing
 }

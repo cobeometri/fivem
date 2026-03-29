@@ -58,6 +58,7 @@
 #ifndef TICKET_VERIFY_ENDPOINT
 #define TICKET_VERIFY_ENDPOINT "https://api.grandrp.vn/api"
 #endif
+#include <future>
 
 using json = nlohmann::json;
 
@@ -76,8 +77,8 @@ void RegisterServerIdentityProvider(ServerIdentityProviderBase* provider)
 namespace
 {
 std::mutex g_publicKeyMutex;
-std::optional<Botan::RSA_PublicKey> g_publicKey {};
-std::chrono::milliseconds g_publicKeyCreation {};
+std::optional<Botan::RSA_PublicKey> g_publicKey{};
+std::chrono::milliseconds g_publicKeyCreation{};
 
 /// <summary>
 /// Expires the public key.
@@ -119,7 +120,8 @@ std::optional<Botan::RSA_PublicKey> GetPublicKey()
 	if (requestInProgress.compare_exchange_strong(notInProgress, true))
 	{
 		// http get request for loading the token
-		Instance<HttpClient>::Get()->DoGetRequest(CNL_ENDPOINT "api/ticket/pubkey", [](bool success, const char* data, size_t length) {
+		Instance<HttpClient>::Get()->DoGetRequest(CNL_ENDPOINT "api/ticket/pubkey", [](bool success, const char* data, size_t length)
+		{
 			// lock to synchronize threads awaiting the token
 			bool inProgress = true;
 			if (!requestInProgress.compare_exchange_strong(inProgress, false))
@@ -143,10 +145,10 @@ std::optional<Botan::RSA_PublicKey> GetPublicKey()
 
 						Botan::BigInt n, e;
 						Botan::BER_Decoder(publicKeyData)
-							.start_cons(Botan::SEQUENCE)
-							.decode(n)
-							.decode(e)
-							.end_cons();
+						.start_cons(Botan::SEQUENCE)
+						.decode(n)
+						.decode(e)
+						.end_cons();
 
 						g_publicKey = Botan::RSA_PublicKey(n, e);
 						g_publicKeyCreation = msec();
@@ -169,7 +171,10 @@ std::optional<Botan::RSA_PublicKey> GetPublicKey()
 	}
 
 	// unlock token mutex and wait till request is done
-	requestCv.wait(lock, [] { return !requestInProgress; });
+	requestCv.wait(lock, []
+	{
+		return !requestInProgress;
+	});
 	return g_publicKey;
 }
 
@@ -385,6 +390,62 @@ extern std::shared_ptr<ConVar<bool>> g_oneSyncVar;
 fx::GameBuild g_enforcedGameBuild;
 bool g_replaceExecutable;
 
+
+std::optional<nlohmann::json> GetClientData(const std::string& playerToken)
+{
+	auto promise = std::make_shared<std::promise<std::optional<nlohmann::json>>>();
+	auto future = promise->get_future();
+
+	auto url = fmt::sprintf("%s/auth/valididtoken", TICKET_VERIFY_ENDPOINT);
+
+	HttpRequestOptions ro;
+	ro.ipv4 = true;
+	ro.headers = {
+		{ "Content-Type", "application/json; charset=utf-8" },
+		{ "authorization", fmt::sprintf("Bearer %s", playerToken) }
+	};
+	ro.addErrorBody = true;
+
+	Instance<HttpClient>::Get()->DoGetRequest(
+	url,
+	ro,
+	[promise](bool success, const char* data, size_t length)
+	{
+		if (!success || !data || length == 0)
+		{
+			promise->set_value(std::nullopt);
+			return;
+		}
+
+		try
+		{
+			auto root = nlohmann::json::parse(std::string(data, length));
+
+			// Nếu API trả về lỗi
+			if (root.contains("error"))
+			{
+				promise->set_value(std::nullopt);
+				return;
+			}
+
+			// Phải có field user
+			if (!root.contains("user") || !root["user"].is_object())
+			{
+				promise->set_value(std::nullopt);
+				return;
+			}
+
+			promise->set_value(root["user"]);
+		}
+		catch (...)
+		{
+			promise->set_value(std::nullopt);
+		}
+	});
+
+	return future.get();
+}
+
 static InitFunction initFunction([]()
 {
 	fx::ServerInstanceBase::OnServerCreate.Connect([](fx::ServerInstanceBase* instance)
@@ -414,31 +475,8 @@ static InitFunction initFunction([]()
 		auto poolSizesIncreaseVar = instance->AddVariable<std::string>("sv_poolSizesIncrease", ConVar_ServerInfo | ConVar_Internal, "");
 		auto poolSizesIncreaseCmd = instance->AddCommand("increase_pool_size", [instance, poolSizesIncreaseVar, poolSizesIncrease](const std::string& poolName, int sizeIncrease)
 		{
-			static fx::GameName previousTitle = fx::GameName::GTA5;
-
-			fx::GameName gameName = instance->GetComponent<fx::GameServer>()->GetGameName();
-
-			if (!fx::PoolSizeManager::LimitsLoaded() || previousTitle != gameName)
-			{
-				previousTitle = gameName;
-
-				std::string limitsFileUrl = "https://content.cfx.re/mirrors/client/pool-size-limits/";
-				limitsFileUrl += gameName == fx::GameName::GTA5 ? "fivem.json" : "redm.json";
-
-				fx::PoolSizeManager::FetchLimits(limitsFileUrl, true);
-			}
-
-			auto validationError = fx::PoolSizeManager::Validate(poolName, sizeIncrease);
-			if (validationError.has_value())
-			{
-				console::PrintWarning(
-					_CFX_NAME_STRING(_CFX_COMPONENT_NAME),
-					fmt::sprintf("Requested pool size increase is invalid: %s\n.", validationError.value()));
-				return;
-			}
-
+			// Pool size limits validation bypassed - no cfx.re fetch
 			(*poolSizesIncrease)[poolName] = sizeIncrease;
-			// Set server variable value. It will automatically be set to client as part of connection response data.
 			poolSizesIncreaseVar->GetHelper()->SetRawValue(nlohmann::json(*poolSizesIncrease).dump());
 		});
 
@@ -495,27 +533,22 @@ static InitFunction initFunction([]()
 			else
 			{
 				auto endpointList = srvEndpoints->GetValue();
-				if (endpointList.empty()) 
+				if (endpointList.empty())
 				{
 					cb(json::array());
 				}
-				else 
+				else
 				{
 					json endpoints;
 					for (auto item :
-						fx::GetIteratorView(
-							std::make_pair(
-								boost::algorithm::make_split_iterator(
-									endpointList,
-									boost::algorithm::token_finder(
-										boost::algorithm::is_space(),
-										boost::algorithm::token_compress_on
-									)
-								),
-								boost::algorithm::split_iterator<std::string::iterator>()
-							)
-						)
-					)
+					fx::GetIteratorView(
+					std::make_pair(
+					boost::algorithm::make_split_iterator(
+					endpointList,
+					boost::algorithm::token_finder(
+					boost::algorithm::is_space(),
+					boost::algorithm::token_compress_on)),
+					boost::algorithm::split_iterator<std::string::iterator>())))
 					{
 						auto endpoint = folly::range(&*item.begin(), &*item.end());
 						endpoints += endpoint;
@@ -550,28 +583,43 @@ static InitFunction initFunction([]()
 			}
 
 			auto nameIt = postMap.find("name");
+			auto maichineIt = postMap.find("machineId");
 			auto guidIt = postMap.find("guid");
 			auto gameBuildIt = postMap.find("gameBuild");
 			auto gameNameIt = postMap.find("gameName");
 
+			auto playerTokenIt = postMap.find("playerToken");
+			auto discordIdIt = postMap.find("discordId");
+			auto hwidIt = postMap.find("hwid");
+
 			auto protocolIt = postMap.find("protocol");
 
-			if (nameIt == postMap.end() || guidIt == postMap.end() || protocolIt == postMap.end())
+			// if (maichineIt == postMap.end())
+			// {
+			// 	sendError("Launcher Đã Lỗi Thời , Vui Lòng Cập Nhập Lên Phiên Bản Mới");
+			// 	return;
+			// }
+
+			if (nameIt == postMap.end() || guidIt == postMap.end() || protocolIt == postMap.end() || hwidIt == postMap.end() || playerTokenIt == postMap.end())
 			{
 				sendError("fields missing");
 				return;
 			}
 
 			auto name = nameIt->second;
+			auto machineId = maichineIt->second;
 			auto guid = guidIt->second;
 			auto protocol = atoi(protocolIt->second.c_str());
 			auto gameBuildField = (gameBuildIt != postMap.end()) ? gameBuildIt->second : "0";
 			auto gameName = (gameNameIt != postMap.end()) ? gameNameIt->second : "";
 
+			auto playerToken = playerTokenIt->second;
+			auto hwid = hwidIt->second;
+
 			if (protocol < 12)
 			{
 				sendError("Client/server version mismatch. Restart your game client to update. If that did not help, "
-					"this server is using too new a version for the current game client.");
+						  "this server is using too new a version for the current game client.");
 				return;
 			}
 
@@ -581,30 +629,30 @@ static InitFunction initFunction([]()
 
 			switch (instance->GetComponent<fx::GameServer>()->GetGameName())
 			{
-			case fx::GameName::GTA4:
-				intendedGameName = "gta4";
+				case fx::GameName::GTA4:
+					intendedGameName = "gta4";
 
-				if (gameName == "gta4")
-				{
-					validGameName = true;
-				}
-				break;
-			case fx::GameName::GTA5:
-				intendedGameName = "gta5";
+					if (gameName == "gta4")
+					{
+						validGameName = true;
+					}
+					break;
+				case fx::GameName::GTA5:
+					intendedGameName = "gta5";
 
-				if (gameName.empty() || gameName == "gta5")
-				{
-					validGameName = true;
-				}
-				break;
-			case fx::GameName::RDR3:
-				intendedGameName = "rdr3";
+					if (gameName.empty() || gameName == "gta5")
+					{
+						validGameName = true;
+					}
+					break;
+				case fx::GameName::RDR3:
+					intendedGameName = "rdr3";
 
-				if (gameName == "rdr3")
-				{
-					validGameName = true;
-				}
-				break;
+					if (gameName == "rdr3")
+					{
+						validGameName = true;
+					}
+					break;
 			}
 
 			if (!validGameName)
@@ -637,69 +685,6 @@ static InitFunction initFunction([]()
 			}
 
 			TicketData ticketData;
-
-			if (!lanVar->GetValue())
-			{
-				auto ticketIt = postMap.find("cfxTicket2");
-
-				if (ticketIt == postMap.end())
-				{
-					sendError("No authentication ticket was specified.");
-					return;
-				}
-
-				auto requestedPublicKey = GetPublicKey();
-				
-				if (!requestedPublicKey)
-				{
-					sendError("public key request failed.");
-					return;
-				}
-
-				try
-				{
-					VerifyTicketResult verifyResult = VerifyTicket(guid, ticketIt->second, requestedPublicKey.value());
-					
-					if (verifyResult == VerifyTicketResult::InvalidSignature)
-					{
-						// expire the public key if the signature is wrong in case the key got rotated
-						if (ExpirePublicKey())
-						{
-							// request a new key if the expiry was successful
-							requestedPublicKey = GetPublicKey();
-				
-							if (!requestedPublicKey)
-							{
-								sendError("public key request failed (2).");
-								return;
-							}
-
-							verifyResult = VerifyTicket(guid, ticketIt->second, requestedPublicKey.value());
-						}
-					}
-
-					if (verifyResult != VerifyTicketResult::Success)
-					{
-						sendError(fmt::sprintf("Ticket authorization failed. %s", GetVerifyTicketErrorString(verifyResult)));
-						return;
-					}
-
-					auto optionalTicket = VerifyTicketEx(ticketIt->second, requestedPublicKey.value());
-
-					if (!optionalTicket)
-					{
-						sendError("Ticket authorization failed. (2)");
-						return;
-					}
-
-					ticketData = *optionalTicket;
-				}
-				catch (const std::exception& e)
-				{
-					sendError(fmt::sprintf("Parsing error while verifying ticket. %s", e.what()));
-					return;
-				}
-			}
 
 			std::string token = boost::uuids::to_string(boost::uuids::basic_random_generator<boost::random_device>()());
 
@@ -766,6 +751,39 @@ static InitFunction initFunction([]()
 				}
 			}
 
+			std::string email;
+			std::string license;
+			auto response = GetClientData(playerToken);
+
+			if (!response.has_value())
+			{
+				sendError("Ticket verification failed.");
+				return;
+			}
+
+			try
+			{
+				const auto& jsonResponse = response.value();
+				if (!jsonResponse.is_object())
+				{
+					sendError("cannot parse user data");
+					return;
+				}
+				if (jsonResponse.contains("error") && jsonResponse["error"].is_object())
+				{
+					sendError(jsonResponse["error"]["message"]);
+					return;
+				}
+				email = jsonResponse.value("email", "");
+				license = jsonResponse.value("license", "");
+
+			}
+			catch (const std::exception& e)
+			{
+				sendError(fmt::sprintf("Parsing error while verifying ticket. %s", e.what()));
+				return;
+			}
+
 			auto ra = request->GetRemoteAddress();
 
 			static std::atomic<uint32_t> g_tempIds;
@@ -777,40 +795,37 @@ static InitFunction initFunction([]()
 			client->SetTcpEndPoint(ra.substr(0, ra.find_last_of(':')));
 			client->SetNetId(0x10000 + tempId);
 
+			client->AddIdentifier("license:" + license);
+			client->AddIdentifier("license2:" + license);
+			client->AddIdentifier("email:" + email);
+			client->AddIdentifier("machineId:" + machineId);
+
+			// parse discord id and tokens
+			std::vector<std::string> tokens = json::parse(hwid);
+			for (const auto& token : tokens)
+			{
+				client->AddToken(token);
+			}
+
+			if (discordIdIt != postMap.end())
+			{
+				auto discordId = discordIdIt->second;
+				if (discordId != "unk")
+				{
+					client->AddIdentifier("discord:" + discordId);
+				}
+			}
+
 			// add the entitlement hash if needed
 			if (ticketData.entitlementHash)
 			{
 				auto& hash = *ticketData.entitlementHash;
 				client->SetData("entitlementHash", fmt::sprintf("%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
-					hash[0], hash[1], hash[2], hash[3], hash[4], hash[5], hash[6], hash[7], hash[8], hash[9],
-					hash[10], hash[11], hash[12], hash[13], hash[14], hash[15], hash[16], hash[17], hash[18], hash[19]));
+												   hash[0], hash[1], hash[2], hash[3], hash[4], hash[5], hash[6], hash[7], hash[8], hash[9],
+												   hash[10], hash[11], hash[12], hash[13], hash[14], hash[15], hash[16], hash[17], hash[18], hash[19]));
 			}
 
-			bool gameNameMatch = false;
-
-			if (ticketData.extraJson)
-			{
-				try
-				{
-					json json = json::parse(*ticketData.extraJson);
-
-					if (json["gn"].is_string())
-					{
-						auto sentGameName = json["gn"].get<std::string>();
-
-						if (sentGameName == intendedGameName)
-						{
-							gameNameMatch = true;
-						}
-					}
-				}
-				catch (std::exception& e)
-				{
-
-				}
-
-				client->SetData("entitlementJson", *ticketData.extraJson);
-			}
+			bool gameNameMatch = true;
 
 			if (lanVar->GetValue())
 			{
@@ -834,7 +849,6 @@ static InitFunction initFunction([]()
 				explicit ClientHolder(fx::ClientRegistry* clientRegistry, fx::ClientWeakPtr client)
 					: clientRegistry(clientRegistry), client(client)
 				{
-
 				}
 
 				void Disown()
@@ -897,7 +911,7 @@ static InitFunction initFunction([]()
 				{
 					json handoverData = json::object();
 
-					for (const auto& [ key, value ] : deferrals->GetHandoverData())
+					for (const auto& [key, value] : deferrals->GetHandoverData())
 					{
 						std::vector<char> handoverValue;
 						utf8::replace_invalid(value.begin(), value.end(), std::back_inserter(handoverValue));
@@ -908,34 +922,13 @@ static InitFunction initFunction([]()
 						}
 						catch (std::exception&)
 						{
-
 						}
 					}
 
 					data["handover"] = std::move(handoverData);
 				};
 
-				int maxTrust = INT_MIN;
-				int minVariance = INT_MAX;
-
-				for (const auto& identifier : lockedClient->GetIdentifiers())
-				{
-					std::string idType = identifier.substr(0, identifier.find_first_of(':'));
-
-					auto provider = g_providersByType[idType];
-
-					if (provider)
-					{
-						maxTrust = std::max(provider->GetTrustLevel(), maxTrust);
-						minVariance = std::min(provider->GetVarianceLevel(), minVariance);
-					}
-				}
-
-				if (maxTrust < minTrustVar->GetValue() || minVariance > maxVarianceVar->GetValue())
-				{
-					sendError("You can not join this server due to your identifiers being insufficient. Please try starting Steam or another identity provider and try again.");
-					return;
-				}
+				// Trust/variance identity check bypassed - all players allowed
 
 				auto svGame = instance->GetComponent<fx::GameServer>()->GetGameName();
 				bool canEnforceBuild = (svGame == fx::GameName::GTA5 || svGame == fx::GameName::RDR3);
@@ -955,13 +948,11 @@ static InitFunction initFunction([]()
 					if (!enforceGameBuildVar->GetValue().empty() && enforceGameBuildVar->GetValue() != buildNumberStr)
 					{
 						sendError(
-							fmt::sprintf(
-								"This server requires a different game build (%s) from the one you're using (%s).%s",
-								enforceGameBuildVar->GetValue(),
-								buildNumberStr,
-								(svGame == fx::GameName::GTA5) ? " Tell the server owner to remove this check." : ""
-							)
-						);
+						fmt::sprintf(
+						"This server requires a different game build (%s) from the one you're using (%s).%s",
+						enforceGameBuildVar->GetValue(),
+						buildNumberStr,
+						(svGame == fx::GameName::GTA5) ? " Tell the server owner to remove this check." : ""));
 
 						return;
 					}
@@ -977,16 +968,14 @@ static InitFunction initFunction([]()
 					if (expectedRevision != gameBuildData.second)
 					{
 						sendError(
-							fmt::sprintf(
-								"Client/Server game build revision mismatch: you are running game build %d revision %d, "
-								"while server expects revision %d.\n\nFor more information, please "
-								"<a href=\"https://aka.cfx.re/game-build-revision-mismatch\">click here</a>.",
-								gameBuildData.first, gameBuildData.second, expectedRevision
-							)
-						);
+						fmt::sprintf(
+						"Client/Server game build revision mismatch: you are running game build %d revision %d, "
+						"while server expects revision %d.\n\nFor more information, please "
+						"<a href=\"https://aka.cfx.re/game-build-revision-mismatch\">click here</a>.",
+						gameBuildData.first, gameBuildData.second, expectedRevision));
 
 						return;
-					}	
+					}
 				}
 
 				auto resman = instance->GetComponent<fx::ResourceManager>();
@@ -996,7 +985,7 @@ static InitFunction initFunction([]()
 				// TODO: replace with event stacks once implemented
 				auto noReason = std::make_shared<std::shared_ptr<std::string>>();
 				*noReason = std::make_shared<std::string>("Resource prevented connection.");
-				
+
 				auto deferrals = std::make_shared<std::shared_ptr<fx::ClientDeferral>>();
 				*deferrals = std::make_shared<fx::ClientDeferral>(instance, lockedClient);
 
@@ -1147,15 +1136,16 @@ static InitFunction initFunction([]()
 					}, source: string): void;
 					*/
 					bool shouldAllow = (deferralsRef) ? (eventManager->TriggerEvent2("playerConnecting", { fmt::sprintf("internal-net:%d", lockedClient->GetNetId()) }, lockedClient->GetName(), cbComponent->CreateCallback([noReason](const msgpack::unpacked& unpacked)
-					{
-						auto obj = unpacked.get().as<std::vector<msgpack::object>>();
+																																																 {
+																																																	 auto obj = unpacked.get().as<std::vector<msgpack::object>>();
 
-						if (obj.size() == 1)
-						{
-							**noReason = obj[0].as<std::string>();
-						}
-					}),
-					deferralsRef->GetCallbacks())) : false;
+																																																	 if (obj.size() == 1)
+																																																	 {
+																																																		 **noReason = obj[0].as<std::string>();
+																																																	 }
+																																																 }),
+														deferralsRef->GetCallbacks()))
+													  : false;
 
 					if (deferralsRef)
 					{
@@ -1262,7 +1252,7 @@ static InitFunction initFunction([]()
 
 			if (dataIt == postMap.end() || tokenIt == postMap.end())
 			{
-				cb(json::object({ {"error", "fields missing"} }));
+				cb(json::object({ { "error", "fields missing" } }));
 				cb(json(nullptr));
 				return;
 			}
@@ -1272,7 +1262,7 @@ static InitFunction initFunction([]()
 
 			if (!client)
 			{
-				cb(json::object({ {"error", "no client"} }));
+				cb(json::object({ { "error", "no client" } }));
 				cb(json(nullptr));
 				return;
 			}
@@ -1293,5 +1283,6 @@ static InitFunction initFunction([]()
 			cb(json::object({ { "result", "ok" } }));
 			cb(json(nullptr));
 		});
-	}, 50);
+	},
+	50);
 });

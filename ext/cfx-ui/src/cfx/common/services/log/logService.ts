@@ -39,6 +39,6 @@ export function registerLogService(container: ServicesContainer, providers: inte
 
     const logService = ctx.container.get(LogService);
 
-    return new ScopedLogger(logService, loggerName.value);
+    return new ScopedLogger(logService, String(loggerName.value));
   });
 }

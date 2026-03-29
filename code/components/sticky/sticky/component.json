@@ -1,0 +1,16 @@
+{
+	"name": "sticky",
+	"version": "0.1.0",
+	"dependencies": [
+		"fx[2]",
+		"http-client",
+		"net",
+		"citizen:resources:core",
+		"scripting",
+		"conhost",
+		"vendor:openssl_ssl",
+		"vendor:botan",
+		"rage:input:five"
+	],
+	"provides": []
+}

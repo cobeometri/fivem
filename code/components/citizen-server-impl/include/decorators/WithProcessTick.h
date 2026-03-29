@@ -24,7 +24,7 @@ namespace fx
 
 					if (now >= 150)
 					{
-						trace("hitch warning: frame time of %d milliseconds\n", now);
+					//	trace("hitch warning: frame time of %d milliseconds\n", now);
 					}
 
 					// clamp time to 200ms to reduce effects of excessive hitches

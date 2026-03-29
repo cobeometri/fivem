@@ -1,84 +1,54 @@
-import {
-  Button,
-  Icons,
-  Box,
-  Flex,
-  Title,
-  Text,
-  Interactive,
-} from '@cfx-dev/ui-components';
-import { observer } from 'mobx-react-lite';
-import React from 'react';
+/* eslint-disable camelcase */
+import { clsx } from "@cfx-dev/ui-components";
+import { Box, Image, Text } from "lr-components";
+import { observer } from "mobx-react-lite";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useLauncherService } from "../../services/launcher/launcher.service";
 
-import { useService } from 'cfx/base/servicesContainer';
-import { useEventHandler } from 'cfx/common/services/analytics/analytics.service';
-import { EventActionNames, ElementPlacements } from 'cfx/common/services/analytics/types';
-import { $L } from 'cfx/common/services/intl/l10n';
-import { ISettingsUIService } from 'cfx/common/services/settings/settings.service';
+const logo = new URL("assets/images/logo.webp", import.meta.url).href;
 
-import { Exitter } from './Exitter/Exitter';
-import { HomeButton } from './HomeButton/HomeButton';
-import { NavBarState } from './NavBarState';
-import { UserBar } from './UserBar/UserBar';
-
-import { mpMenu } from 'cfx/apps/mpMenu/mpMenu';
-
-function openExternalUrl(url: string) {
-  mpMenu.invokeNative('openUrl', url);
-}
-
-export const NavBar = observer(function NavBar() {
-  const SettingsUIService = useService(ISettingsUIService);
-  const eventHandler = useEventHandler();
-
-  const handleSettingsClick = React.useCallback(() => {
-    SettingsUIService.open();
-    eventHandler({
-      action: EventActionNames.SiteNavClick,
-      properties: {
-        text: '#BottomNav_Settings',
-        link_url: '/',
-        element_placement: ElementPlacements.Nav,
-        position: 0,
-      },
-    });
-  }, [eventHandler, SettingsUIService]);
-
-  React.useEffect(() => {
-    NavBarState.setReady();
-
-    return NavBarState.setNotReady;
-  }, []);
+export const NavBar = observer(() => {
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const LauncherService = useLauncherService();
 
   return (
-    <Flex repell centered gap="large">
-      {NavBarState.homeButtonVisible
-        ? (
-            <HomeButton />
-          )
-        : null}
-
-      <Flex centered="axis" gap="large">
-        <Interactive onClick={() => openExternalUrl('https://grandrp.vn')}>
-          <Text weight="bold" opacity="75">Trang chủ</Text>
-        </Interactive>
-        <Interactive onClick={() => openExternalUrl('https://grandrp.vn/news')}>
-          <Text weight="bold" opacity="75">Tin tức</Text>
-        </Interactive>
-        <Interactive onClick={() => openExternalUrl('https://facebook.com/grandrp')}>
-          <Text weight="bold" opacity="75">Fanpage</Text>
-        </Interactive>
-      </Flex>
-
-      <Box grow ref={NavBarState.outletRef} />
-
-      <UserBar />
-
-      <Title title={$L('#BottomNav_Settings')}>
-        <Button size="large" icon={Icons.settings} onClick={handleSettingsClick} />
-      </Title>
-
-      <Exitter />
-    </Flex>
+    <Box
+      className="w-full flex items-center justify-between z-[5]"
+      rMargin={[40, 40, 0, 0]}
+    >
+      <Box className="h-full flex items-center" rGap={18} rPadding={[0, 0, 0, 40]}>
+        <Image
+          src={logo}
+          alt="Logo"
+          className={clsx("object-cover")}
+          rWidth={67}
+          rHeight={57}
+        />
+        <Box className="flex flex-col gap-[.55rem]">
+          <Text className="font-normal text-white" rFontSize={16}>
+            Trực tuyến
+          </Text>
+          <Text className="text-[#82FF5F] font-bold" rFontSize={16}>
+            {LauncherService.totalPlayersOnline}/{LauncherService.totalPlayersMax}
+          </Text>
+        </Box>
+      </Box>
+      {!LauncherService?.user && (
+        <Box className="flex flex-col items-end justify-end gap-[.53rem]">
+          <Text className="font-normal text-white uppercase" rFontSize={18}>
+            Bạn chưa có tài khoản?
+          </Text>
+          <Text 
+            className="text-[#82FF5F] font-bold hover:underline cursor-pointer uppercase" rFontSize={18}
+            onClick={() => {
+              navigate("/register");
+            }}
+          >
+            Đăng ký ngay
+          </Text>
+        </Box>
+      )}
+    </Box>
   );
 });

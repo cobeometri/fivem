@@ -5,14 +5,14 @@ import {
   Title,
   ui,
   Linkify,
-  Separator,
-  Icon,
 } from '@cfx-dev/ui-components';
 import { observer } from 'mobx-react-lite';
 import React from 'react';
 
-import { $L } from 'cfx/common/services/intl/l10n';
+import { ElementPlacements } from 'cfx/common/services/analytics/types';
 import { IServerView } from 'cfx/common/services/servers/types';
+
+import { ServerCoreLoafs } from '../ServerCoreLoafs/ServerCoreLoafs';
 
 export const ServerExtraDetails = observer(function ServerExtraDetails({
   server,
@@ -34,24 +34,10 @@ export const ServerExtraDetails = observer(function ServerExtraDetails({
     }
   }
 
-  if (varNodes.length === 0) {
-    return null;
-  }
-
   return (
-    <Flex vertical>
-      <Flex repell centered>
-        <Flex centered gap="small">
-          <Icon size="normal" opacity="50">
-            {Icons.visibility}
-          </Icon>
-
-          <Text uppercase size="normal" opacity="50" weight="bold">
-            {$L('#ServerDetail_Details')}
-          </Text>
-        </Flex>
-
-        <Separator thin />
+    <Flex vertical gap="large">
+      <Flex wrap>
+        <ServerCoreLoafs server={server} elementPlacement={ElementPlacements.ServerExtraDetails} />
       </Flex>
 
       {Boolean(varNodes.length) && (

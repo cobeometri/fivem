@@ -8,6 +8,7 @@ import {
   Flex,
   FlexRestricter,
   Loaf,
+  PremiumBadge,
   Text,
   TextBlock,
   Title,
@@ -60,7 +61,7 @@ export const TopServersBlock = observer(function TopServersBlock() {
       <Flex vertical fullHeight>
         <Flex repell centered="axis" gap="large">
           <Flex centered="axis">
-            <Text uppercase size="normal" opacity="50" weight="bold">
+            <Text size="large" opacity="50" weight="bold">
               {$L('#Home_RegionTopServers')}
             </Text>
 
@@ -112,14 +113,7 @@ export const TopServers = observer(function TopServers() {
         {cardNodes}
       </div>
 
-      <div className={s.selector}>
-        <div className={s.first}>
-          {selectorNodes[0] || null}
-        </div>
-        <div className={s.rest}>
-          {selectorNodes.slice(1)}
-        </div>
-      </div>
+      <div className={s.selector}>{selectorNodes}</div>
     </div>
   );
 });
@@ -245,11 +239,15 @@ const Card = observer(function Card(props: CardProps) {
                 <ServerIcon type="details" server={server} className={s.icon} />
 
                 <Flex centered>
+                  {!!server.premium && (
+                    <PremiumBadge level={server.premium} />
+                  )}
+
                   <ServerPower server={server} />
                 </Flex>
 
                 <Flex centered>
-                  <Icon opacity="75">{Icons.playersCount}</Icon>
+                  <Text opacity="75">{Icons.playersCount}</Text>
                   <Text opacity="75">
                     <ServerPlayersCount server={server} />
                   </Text>

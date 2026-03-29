@@ -1,13 +1,14 @@
-import { Flex, FlexRestricter, Page, Text, Title, Box } from '@cfx-dev/ui-components';
-import { observer } from 'mobx-react-lite';
+import { Flex, FlexRestricter, Page } from "@cfx-dev/ui-components";
+import { observer } from "mobx-react-lite";
 
-import { InsideNavBar } from 'cfx/apps/mpMenu/parts/NavBar/InsideNavBar';
+import { InsideNavBar } from "cfx/apps/mpMenu/parts/NavBar/InsideNavBar";
 
-import { Continuity } from './Continuity/Continuity';
-import { Footer } from './Footer/Footer';
-import { HomePageNavBarLinks } from './HomePage.links';
-import { TopServersBlock } from './TopServers/TopServers';
-import { PlatformStatus } from '../../parts/PlatformStatus/PlatformStatus';
+import { Continuity } from "./Continuity/Continuity";
+import { Footer } from "./Footer/Footer";
+import { HomePageNavBarLinks } from "./HomePage.links";
+import { PlatformStats } from "./PlatformStats/PlatformStats";
+import { PlatformStatus } from "./PlatformStatus/PlatformStatus";
+import { TopServersBlock } from "./TopServers/TopServers";
 
 export const HomePage = observer(function HomePage() {
   return (
@@ -18,9 +19,7 @@ export const HomePage = observer(function HomePage() {
 
           <PlatformStatus />
 
-          <Flex centered="axis" gap="small">
-            <Text size="small" opacity="50">Grand Roleplay</Text>
-          </Flex>
+          <PlatformStats />
         </Flex>
       </InsideNavBar>
 

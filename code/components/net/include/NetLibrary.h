@@ -171,6 +171,8 @@ private:
 
 	std::string m_playerName;
 
+	std::string m_playerToken;
+
 	fwRefContainer<INetMetricSink> m_metricSink;
 
 	std::string m_infoString;
@@ -223,6 +225,12 @@ public:
 	virtual const char* GetPlayerName() override;
 
 	virtual void SetPlayerName(const char* name) override;
+
+	virtual const char* GetPlayerToken();
+
+	virtual void SetPlayerToken(const char* token);
+
+	virtual const char* GetDiscordId();
 
 	virtual void SetBase(uint32_t base) override;
 

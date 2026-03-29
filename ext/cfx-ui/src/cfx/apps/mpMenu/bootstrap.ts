@@ -2,6 +2,7 @@ import { isExternalUrl } from '@cfx-dev/ui-components';
 import 'reflect-metadata';
 
 // Styles setup
+import './styles/tailwind.css';
 import './styles/index.scss';
 
 import { mpMenu } from './mpMenu';

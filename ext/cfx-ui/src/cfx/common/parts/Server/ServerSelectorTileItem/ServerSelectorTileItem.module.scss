@@ -1,7 +1,10 @@
 .root {
+  @include ui.def('hh', ui.q(4));
+
   @include ui.border-radius('normal');
 
-  background-color: ui.color('main', 50);
+  @include ui.def('backdrop-color', ui.color-token('backdrop-300'));
+  @include ui.fake-backdrop-blur();
 
   cursor: pointer;
 

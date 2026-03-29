@@ -25,6 +25,7 @@ import {
   BsSortNumericDown,
   BsSortNumericDownAlt,
 } from 'react-icons/bs';
+import { FiFilter } from 'react-icons/fi';
 
 import { useEventHandler } from 'cfx/common/services/analytics/analytics.service';
 import { EventActionNames, ElementPlacements } from 'cfx/common/services/analytics/types';
@@ -59,7 +60,7 @@ export const ServerFilters = observer(function ServerFilters(props: ServerFilter
 
   const filtersDecorator = config.filteringByAnyTag || config.filteringByAnyLocale
     ? (
-        <Dot />
+      <Dot />
       )
     : null;
 
@@ -81,8 +82,8 @@ export const ServerFilters = observer(function ServerFilters(props: ServerFilter
             <Decorate decorator={filtersDecorator}>
               <Button
                 size="large"
-                theme={(active && 'primary') || 'default'}
-                icon={Icons.filter}
+                theme={(active && 'primary') || 'default-blurred'}
+                icon={<FiFilter />}
                 text={$L('#ServerList_Filter')}
               />
             </Decorate>
@@ -92,9 +93,9 @@ export const ServerFilters = observer(function ServerFilters(props: ServerFilter
         <Popover at="top-right" popover={<SortPopover config={config} />}>
           {(active) => (
             <Button
-              theme={(active && 'primary') || 'default'}
+              theme={(active && 'primary') || 'default-blurred'}
               size="large"
-              icon={Icons.sort}
+              icon={iconsMap[config.sortBy][config.sortDir]}
             />
           )}
         </Popover>
@@ -183,7 +184,7 @@ const FiltersPopover = observer(function FiltersPopover(props: ServerFiltersProp
             <Pad>
               <Flex repell centered>
                 <ControlBox size="small">
-                  <Text uppercase opacity="50">{$L('#ServerList_Locales')}</Text>
+                  <Text opacity="50">{$L('#ServerList_Locales')}</Text>
                 </ControlBox>
 
                 {config.filteringByAnyLocale && (
@@ -196,7 +197,7 @@ const FiltersPopover = observer(function FiltersPopover(props: ServerFiltersProp
 
             <VirtualScrollable
               itemCount={localesList.length}
-              itemHeight={Math.ceil(UiService.quant * 6)}
+              itemHeight={UiService.quant * 6}
               renderItem={(index) => (
                 <LocaleFaucet config={config} locale={locales[localesList[index]]} />
               )}
@@ -209,7 +210,7 @@ const FiltersPopover = observer(function FiltersPopover(props: ServerFiltersProp
             <Pad>
               <Flex repell centered>
                 <ControlBox size="small">
-                  <Text uppercase opacity="50">{$L('#ServerList_Tags')}</Text>
+                  <Text opacity="50">{$L('#ServerList_Tags')}</Text>
                 </ControlBox>
 
                 {config.filteringByAnyTag && (
@@ -222,7 +223,7 @@ const FiltersPopover = observer(function FiltersPopover(props: ServerFiltersProp
 
             <VirtualScrollable
               itemCount={tagsList.length}
-              itemHeight={Math.ceil(UiService.quant * 6)}
+              itemHeight={UiService.quant * 6}
               renderItem={(index) => (
                 <TagFaucet config={config} tag={tagsList[index]} count={tags[tagsList[index]].count} />
               )}

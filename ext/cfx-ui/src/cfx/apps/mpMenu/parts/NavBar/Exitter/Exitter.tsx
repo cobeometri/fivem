@@ -13,17 +13,25 @@ import { mpMenu } from 'cfx/apps/mpMenu/mpMenu';
 import { $L } from 'cfx/common/services/intl/l10n';
 import { useOpenFlag } from 'cfx/utils/hooks';
 
+import { NavBarState } from '../NavBarState';
+
 import s from './Exitter.module.scss';
+
+type ButtonTheme = React.ComponentProps<typeof Button>['theme'];
 
 export function Exitter() {
   const [confirmerOpen, openConfirmer, closeConfirmer] = useOpenFlag(false);
+
+  const buttonTheme: ButtonTheme = NavBarState.forceTransparentNav
+    ? 'default'
+    : 'default-blurred';
 
   const AfterTitleOutlet = useOutlet(TITLE_OUTLET_ID, 'after');
 
   return (
     <>
       <Title fixedOn="bottom-right" title={$L('#ExitToDesktop')}>
-        <Button size="large" icon={Icons.exit} onClick={openConfirmer} />
+        <Button size="large" icon={Icons.exit} theme={buttonTheme} onClick={openConfirmer} />
       </Title>
 
       {confirmerOpen && (
@@ -35,7 +43,7 @@ export function Exitter() {
                   <Text size="xxlarge">{$L('#ExitToDesktopConfirmation')}</Text>
 
                   <Flex gap="large">
-                    <Button size="large" text={$L('#ExitToDesktop')} onClick={mpMenu.exit} />
+                    <Button theme="default-blurred" size="large" text={$L('#ExitToDesktop')} onClick={mpMenu.exit} />
                     <Button
                       theme="primary"
                       size="large"

@@ -26,13 +26,31 @@ html {
 }
 
 body {
+  --backdrop-image: url('assets/images/background.webp');
+
+  background-image: var(--backdrop-image);
+  background-size: 100% 100%;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-color: #000;
+  font-family: "SF Pro", sans-serif !important;
+  font-optical-sizing: auto;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    // background-color: rgba($color: #1a1a1a, $alpha: .75)
+  }
+
   @include ui.def('viewport-top',   calc((100vh - ui.use('height')) * 0.5));
   @include ui.def('viewport-bottom', calc(100vh - ui.use('viewport-top')));
 
   @include ui.def('viewport-left',  calc((100vw - ui.use('width')) * 0.5));
   @include ui.def('viewport-right',  calc(100vw - ui.use('viewport-left')));
-
-  background-color: ui.color('main');
 }
 
 #backdrop-outlet {
@@ -40,6 +58,9 @@ body {
   height: 100vh;
 
   background: ui.color-token('backdrop');
+}
+.cfxui-blurred-backdrop #backdrop-outlet {
+  backdrop-filter: blur(20px) contrast(50%);
 }
 
 #cfxui-root {
@@ -56,6 +77,7 @@ body {
   height: var(--height);
 
   transition: transform .2s ease, filter .2s ease;
+  transform-origin: left center;
 
   &.shrink {
     transform: translateX(-10px);
@@ -133,6 +155,7 @@ html, body {
 
 h1, h2, h3, h4, h5, h6 {
   color: ui.color-token('text');
+  @include ui.font-family('secondary');
   @include ui.font-weight('bold');
 }
 h1 {
@@ -162,35 +185,6 @@ kbd {
   border: solid 1px ui.color-token('kbd-border');
 }
 
-select {
-  background-color: ui.color-token('select-background');
-  height: ui.control-height('normal');
-  color: ui.color-token('select-text');
-  padding: 0 ui.offset('small');
-  border: solid 2px ui.color-token('select-border');
-  border-radius: ui.border-radius('xsmall');
-  font-size: ui.font-size('normal');
-  @include ui.font-family('primary');
-
-  @include ui.animated('border-color');
-
-  &:focus {
-    border-color: ui.color-token('select-focus-border');
-  }
-
-  option {
-    background-color: ui.color-token('select-option-background');
-  }
-
-  &::-webkit-scrollbar {
-    background-color: ui.color-token('select-option-background');
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background-color: ui.color('main', 100);
-  }
-}
-
 p {
   padding: ui.offset('small') 0;
 
@@ -207,4 +201,12 @@ li::marker {
 
   fill: currentColor;
   stroke: currentColor;
+
+  &.mirror {
+    transform: rotateY(180deg);
+  }
+}
+
+.input {
+  background: url(assets/images/input_assets_1.png) lightgray 0px 8.307px / 100% 84.521% no-repeat, linear-gradient(270deg, rgba(60, 68, 107, 0.08) 0%, rgba(60, 68, 107, 0.20) 50%, rgba(60, 68, 107, 0.08) 100%);
 }
