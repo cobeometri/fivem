@@ -769,7 +769,7 @@ static InitFunction initFunction([] ()
 			{
 				if (!gameUnloaded)
 				{
-					netLibrary->OnConnectionProgress("Waiting for game to shut down...", 0, 100, true);
+					netLibrary->OnConnectionProgress("Đang chờ game tắt...", 0, 100, true);
 
 					finishConnectCb = cb;
 

@@ -744,13 +744,13 @@ static bool ShowDownloadNotification(const std::vector<std::pair<GameCacheEntry,
 	taskDialogConfig.hInstance = GetModuleHandle(nullptr);
 	taskDialogConfig.dwFlags = TDF_EXPAND_FOOTER_AREA;
 	taskDialogConfig.dwCommonButtons = TDCBF_YES_BUTTON | TDCBF_NO_BUTTON;
-	taskDialogConfig.pszWindowTitle = PRODUCT_NAME L": Game data outdated";
+	taskDialogConfig.pszWindowTitle = PRODUCT_NAME L": Dữ liệu game cần cập nhật";
 	taskDialogConfig.pszMainIcon = TD_INFORMATION_ICON;
-	taskDialogConfig.pszMainInstruction = PRODUCT_NAME L" needs to update the local game data";
+	taskDialogConfig.pszMainInstruction = PRODUCT_NAME L" cần cập nhật dữ liệu game";
 
 	if (shouldAllow)
 	{
-		taskDialogConfig.pszContent = va(gettext(L"The local %s game data is outdated, and needs to be updated. This will copy %s of data from the local disk, and download %s of data from the internet.\nDo you wish to continue?"), PRODUCT_NAME, FormatBytes(localSize), FormatBytes(remoteSize));
+		taskDialogConfig.pszContent = va(gettext(L"Dữ liệu game %s đã cũ và cần được cập nhật. Sẽ sao chép %s từ ổ đĩa và tải %s từ internet.\nBạn có muốn tiếp tục không?"), PRODUCT_NAME, FormatBytes(localSize), FormatBytes(remoteSize));
 	}
 	else
 	{
@@ -889,7 +889,7 @@ static bool PerformUpdate(const std::vector<GameCacheEntry>& entries)
 		
 		if (entry.IsDownloadable())
 		{
-			UI_UpdateText(0, gettext(L"Verifying game content...").c_str());
+			UI_UpdateText(0, gettext(L"Đang xác minh nội dung game...").c_str());
 
 			fileOutdated = CheckFileOutdatedWithUI(entry.GetLocalFileName().c_str(), hashes, &fileStart, fileTotal, &outHash);
 		}
@@ -1033,7 +1033,7 @@ static bool PerformUpdate(const std::vector<GameCacheEntry>& entries)
 		return true;
 	}
 
-	UI_UpdateText(0, gettext(L"Updating game storage...").c_str());
+	UI_UpdateText(0, gettext(L"Đang cập nhật dữ liệu game...").c_str());
 
 	bool retval = DL_RunLoop();
 

@@ -61,7 +61,7 @@ export const ConnectFailed = observer(function ConnectFailed(
   const serviceStatus = useServiceStatus(extra?.status);
   const bodyLocalized = serviceStatus
     ? // eslint-disable-next-line react-hooks/rules-of-hooks
-      useL10n(serviceStatus?.body)
+    useL10n(serviceStatus?.body)
     : "";
 
   return (
@@ -203,10 +203,10 @@ const FailureScheme = observer(function FailureScheme(props: {
       ? "bye"
       : // eslint-disable-next-line no-nested-ternary
       fault === "either"
-      ? "unknown"
-      : isCfxFault(fault)
-      ? "broken"
-      : "ok";
+        ? "unknown"
+        : isCfxFault(fault)
+          ? "broken"
+          : "ok";
 
   // eslint-disable-next-line no-nested-ternary
   const cfxToServer =
@@ -214,8 +214,8 @@ const FailureScheme = observer(function FailureScheme(props: {
     fault === "you"
       ? "bye"
       : fault === "either" || isCfxFault(fault)
-      ? "unknown"
-      : "broken";
+        ? "unknown"
+        : "broken";
 
   return (
     <Flex repell fullWidth centered gap="large">
@@ -229,7 +229,7 @@ const FailureScheme = observer(function FailureScheme(props: {
 
       <Flex vertical centered>
         <Image
-          src={new URL(`assets/images/logo.png`, import.meta.url).href}
+          src={new URL(`assets/images/logo.webp`, import.meta.url).href}
           alt={CurrentGameBrand}
           rWidth={200}
           className="object-contain"

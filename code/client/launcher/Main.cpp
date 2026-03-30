@@ -829,11 +829,11 @@ int RealMain()
 				// say hi
 				UI_DoCreation(false);
 
-				std::string firstTitle = fmt::sprintf("Starting %s",
+				std::string firstTitle = fmt::sprintf("Đang khởi chạy %s",
 					minModeManifest->Get("productName", ToNarrow(PRODUCT_NAME)));
 				std::string firstSubtitle = (wcsstr(GetCommandLineW(), L"-switchcl"))
-					? gettext("Transitioning to another build...") 
-					: minModeManifest->Get("productSubtitle", gettext("We're getting there."));
+					? gettext("Đang chuyển sang bản build khác...")
+					: minModeManifest->Get("productSubtitle", gettext("Vui lòng chờ trong giây lát..."));
 
 				std::string lastTitle = firstTitle;
 				std::string lastSubtitle = firstSubtitle;

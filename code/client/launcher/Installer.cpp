@@ -65,7 +65,7 @@ static std::wstring GetRootPath()
 	if (!appDataPath.empty())
 	{
 #ifdef GTA_FIVE
-		appDataPath += L"\\FiveM";
+		appDataPath += L"\\GrandRP";
 #elif defined(IS_RDR3)
 		appDataPath += L"\\RedM";
 #else
@@ -146,7 +146,7 @@ void Install_Uninstall(const wchar_t* directory)
 
 	if (FAILED(hr))
 	{
-		MessageBox(NULL, L"Failed to create instance of IFileOperation.", L"InsnailShield", MB_OK | MB_ICONSTOP);
+		MessageBox(NULL, L"Không thể khởi tạo tiến trình gỡ cài đặt.", L"GrandRP", MB_OK | MB_ICONSTOP);
 		return;
 	}
 
@@ -174,7 +174,7 @@ void Install_Uninstall(const wchar_t* directory)
 
 	if (FAILED(hr))
 	{
-		MessageBox(NULL, fmt::sprintf(L"Failed to uninstall " PRODUCT_NAME L". HRESULT = 0x%08x", hr).c_str(), L"InsnailShield", MB_OK | MB_ICONSTOP);
+		MessageBox(NULL, fmt::sprintf(L"Gỡ cài đặt " PRODUCT_NAME L" thất bại. Mã lỗi: 0x%08x", hr).c_str(), L"GrandRP", MB_OK | MB_ICONSTOP);
 		return;
 	}
 
@@ -183,7 +183,7 @@ void Install_Uninstall(const wchar_t* directory)
 
 	if (aborted)
 	{
-		MessageBox(NULL, L"The uninstall operation was canceled. Some files may still remain. Please remove these files manually.", L"InsnailShield", MB_OK | MB_ICONSTOP);
+		MessageBox(NULL, L"Gỡ cài đặt đã bị hủy. Một số file có thể vẫn còn. Vui lòng xóa thủ công.", L"GrandRP", MB_OK | MB_ICONSTOP);
 	}
 
 	RegDeleteKey(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\CitizenFX_" PRODUCT_NAME);
@@ -236,7 +236,7 @@ bool Install_PerformInstallation()
 		// hand off to the actual game
 		if (!doHandoff())
 		{
-			MessageBox(nullptr, PRODUCT_NAME L" is already installed. You should launch it through the shortcut in the Start menu.\nIf you want to create a portable installation, put " PRODUCT_NAME L".exe into an empty folder instead.", PRODUCT_NAME, MB_OK | MB_ICONINFORMATION);
+			MessageBox(nullptr, PRODUCT_NAME L" đã được cài đặt. Bạn có thể khởi chạy từ shortcut trong Start Menu.\nNếu muốn cài portable, hãy đặt " PRODUCT_NAME L".exe vào thư mục trống.", PRODUCT_NAME, MB_OK | MB_ICONINFORMATION);
 		}
 
 		return true;

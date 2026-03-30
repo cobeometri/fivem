@@ -31,7 +31,7 @@ static bool Bootstrap_UpdateEXE(int exeSize, const std::string& objectHash)
 
 	UI_DoCreation(true);
 
-	UI_UpdateText(0, fmt::sprintf(gettext(L"Bootstrapping %s..."), PRODUCT_NAME).c_str());
+	UI_UpdateText(0, fmt::sprintf(gettext(L"Đang khởi tạo %s..."), PRODUCT_NAME).c_str());
 
 	if (!DL_RunLoop())
 	{
@@ -152,7 +152,7 @@ bool Bootstrap_DoBootstrap()
 	{
 		if (GetFileAttributes(MakeRelativeCitPath(L"GTA5.exe").c_str()) != INVALID_FILE_ATTRIBUTES || GetFileAttributes(MakeRelativeCitPath(L"..\\GTA5.exe").c_str()) != INVALID_FILE_ATTRIBUTES)
 		{
-			MessageBox(NULL, L"Please do not place FiveM.exe in your game folder. Make a new empty folder (for example, on your desktop) instead.", L"O\x448\x438\x431\x43A\x430", MB_OK | MB_ICONSTOP);
+			MessageBox(NULL, L"Vui lòng không đặt GrandRP.exe trong thư mục game. Hãy tạo thư mục mới (ví dụ trên Desktop).", L"O\x448\x438\x431\x43A\x430", MB_OK | MB_ICONSTOP);
 			return false;
 		}
 	}
@@ -219,7 +219,7 @@ void Bootstrap_ReplaceExecutable(const wchar_t* fileName, const std::wstring& pa
 			}
 			else
 			{
-				MessageBox(NULL, PRODUCT_NAME L" has been installed and can be launched from the shortcut in the Start menu.", PRODUCT_NAME, MB_OK | MB_ICONINFORMATION);
+				MessageBox(NULL, PRODUCT_NAME L" đã được cài đặt. Bạn có thể khởi chạy từ shortcut trong Start Menu.", PRODUCT_NAME, MB_OK | MB_ICONINFORMATION);
 			}
 
 			return;

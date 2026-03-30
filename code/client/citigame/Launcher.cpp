@@ -68,7 +68,7 @@ bool LauncherInterface::PostLoadGame(HMODULE hModule, void(**entryPoint)())
 {
 	static HostSharedData<UpdaterUIState> uuiState("CfxUUIState");
 
-	uuiState->SetText(1, "Analyzing game data");
+	uuiState->SetText(1, "Đang phân tích dữ liệu game");
 	uuiState->SetProgress(100.0);
 	uuiState->OpenWhenExpired();
 

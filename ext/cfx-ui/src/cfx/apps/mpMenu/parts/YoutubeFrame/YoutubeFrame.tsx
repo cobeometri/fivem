@@ -43,7 +43,7 @@ const YoutubeFrame = observer(() => {
         className="z-[3] size-[5rem] rounded-full bg-[#ffffff1a] border-[.1rem] border-[#ffffff33] group-hover:scale-110 group-hover:bg-[#6b728066] transition-all duration-300 flex items-center justify-center
       "
         onClick={() => {
-          mpMenu.invokeNative("openUrl", "https://discord.gg/saigoncorner");
+          mpMenu.invokeNative("openUrl", "https://discord.gg/grandrp");
         }}
       >
         <Icon icon="solar:play-bold" className="size-[2.75rem] text-[#fff]" />

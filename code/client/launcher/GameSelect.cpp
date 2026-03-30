@@ -161,8 +161,8 @@ std::optional<int> EnsureGamePath()
 				// Clear "wrong" path entry
 				WritePrivateProfileString(L"Game", pathKey, nullptr, fpath.c_str());
 
-				static constexpr auto GEN9_ERROR = L"Your selected game installation folder points to the Enhanced edition of GTA V, which is currently not supported by FiveM.\n\n"
-					L"Please select the installation folder for the Legacy version of GTA V.";
+				static constexpr auto GEN9_ERROR = L"Thư mục cài đặt game bạn chọn là phiên bản Enhanced của GTA V, hiện chưa được GrandRP hỗ trợ.\n\n"
+					L"Vui lòng chọn thư mục cài đặt phiên bản Legacy của GTA V.";
 				MessageBox(nullptr, GEN9_ERROR, PRODUCT_NAME, MB_OK | MB_ICONWARNING);
 			}
 			else
@@ -206,10 +206,10 @@ std::optional<int> EnsureGamePath()
 	opts |= FOS_FORCEFILESYSTEM;
 
 	fileDialog->SetOptions(opts);
-	fileDialog->SetTitle(L"Go to your game directory and select " GAME_EXECUTABLE L" to be able to launch " PRODUCT_NAME);
+	fileDialog->SetTitle(L"Mở thư mục game và chọn " GAME_EXECUTABLE L" để khởi chạy " PRODUCT_NAME);
 	
 	COMDLG_FILTERSPEC filter = { 0 };
-	filter.pszName = L"Game executables";
+	filter.pszName = L"File game";
 	filter.pszSpec = GAME_EXECUTABLE;
 	fileDialog->SetFileTypes(1, &filter);
 
@@ -357,8 +357,8 @@ std::optional<int> EnsureGamePath()
 
 				if (proposeDirectory(gameRoot, filesToCheck))
 				{
-					static constexpr auto GEN9_ERROR = L"We could not detect a valid GTA V Legacy installation. However, we found a valid installation for GTA V Enhanced.\n\n"
-						L"Please ensure you have GTA V Legacy installed and select its installation folder in the file dialog after closing this message.";
+					static constexpr auto GEN9_ERROR = L"Không tìm thấy bản GTA V Legacy hợp lệ. Tuy nhiên, đã phát hiện bản GTA V Enhanced.\n\n"
+						L"Vui lòng cài đặt GTA V Legacy và chọn thư mục cài đặt trong hộp thoại tiếp theo.";
 					MessageBox(nullptr, GEN9_ERROR, PRODUCT_NAME, MB_OK | MB_ICONWARNING);
 					break;
 				}
@@ -373,7 +373,7 @@ std::optional<int> EnsureGamePath()
 	{
 		if (hr != HRESULT_FROM_WIN32(ERROR_CANCELLED))
 		{
-			MessageBox(nullptr, va(L"Could not show game folder selection window: IFileDialog::Show failed. HRESULT = 0x%08x.", hr), L"Error", MB_OK | MB_ICONERROR);
+			MessageBox(nullptr, va(L"Không thể hiển thị cửa sổ chọn thư mục game. Mã lỗi: 0x%08x.", hr), L"Lỗi", MB_OK | MB_ICONERROR);
 		}
 
 		return 0;
@@ -384,7 +384,7 @@ std::optional<int> EnsureGamePath()
 
 	if (!result)
 	{
-		MessageBox(nullptr, va(L"You did not select a game folder: IFileDialog::GetResult failed. HRESULT = 0x%08x.", hr), L"Error", MB_OK | MB_ICONERROR);
+		MessageBox(nullptr, va(L"Bạn chưa chọn thư mục game. Mã lỗi: 0x%08x.", hr), L"Lỗi", MB_OK | MB_ICONERROR);
 		return 0;
 	}
 
@@ -392,7 +392,7 @@ std::optional<int> EnsureGamePath()
 
 	if (FAILED(hr = result->GetDisplayName(SIGDN_FILESYSPATH, &resultPath)))
 	{
-		MessageBox(nullptr, va(L"Could not get game directory: IShellItem::GetDisplayName failed. HRESULT = 0x%08x.", hr), L"Error", MB_OK | MB_ICONERROR);
+		MessageBox(nullptr, va(L"Không thể lấy đường dẫn thư mục game. Mã lỗi: 0x%08x.", hr), L"Lỗi", MB_OK | MB_ICONERROR);
 		return 0;
 	}
 

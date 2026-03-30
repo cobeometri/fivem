@@ -173,9 +173,9 @@ static pplx::task<std::vector<ResultTuple>> DownloadResources(std::vector<std::s
 			{
 				return;
 			}
-			std::string_view statusTypeString = (statusType == fx::CachedResourceMounter::StatusType::Downloading) ? "Downloading" : "Verifying";
+			std::string_view statusTypeString = (statusType == fx::CachedResourceMounter::StatusType::Downloading) ? "Đang tải" : "Đang xác minh";
 
-			ThrottledConnectionProgress(fmt::sprintf("%s %s (%d of %d - %.2f/%.2f MiB)", statusTypeString, resourceName, progressCounter->current, progressCounter->total,
+			ThrottledConnectionProgress(fmt::sprintf("%s tài nguyên (%d/%d - %.2f/%.2f MiB)", statusTypeString, progressCounter->current, progressCounter->total,
 				downloadCurrent / 1024.0f / 1024.0f, downloadTotal / 1024.0f / 1024.0f), progressCounter->current, progressCounter->total, true);
 		});
 
@@ -300,19 +300,19 @@ void NetLibraryResourcesComponent::UpdateResources(const std::string& updateList
 	{
 		if (progress.downloadTotal != 0)
 		{
-			ThrottledConnectionProgress(fmt::sprintf("Downloading content manifest (%.2f/%.2f kB)",
+			ThrottledConnectionProgress(fmt::sprintf("Đang tải danh sách tài nguyên (%.2f/%.2f kB)",
 										progress.downloadNow / 1000.0, progress.downloadTotal / 1000.0),
 			0, 1, false);
 		}
 		else if (progress.downloadNow != 0)
 		{
-			ThrottledConnectionProgress(fmt::sprintf("Downloading content manifest (%.2f kB)",
+			ThrottledConnectionProgress(fmt::sprintf("Đang tải danh sách tài nguyên (%.2f kB)",
 										progress.downloadNow / 1000.0),
 			0, 1, false);
 		}
 	};
 
-	ThrottledConnectionProgress("Downloading content manifest...", 0, 1, false);
+	ThrottledConnectionProgress("Đang tải danh sách tài nguyên...", 0, 1, false);
 
 	httpClient->DoPostRequest(fmt::sprintf("%sclient", curServerUrlNonTls), httpClient->BuildPostString(postMap), options,
 		[this, httpClient, address, curServerUrl, updateList, doneCb](bool result, const char* data, size_t size)

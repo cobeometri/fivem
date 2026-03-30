@@ -80,7 +80,22 @@ export namespace mpMenu {
     return events.addListener(eventName, cb);
   }
 
+  // Custom external link dialog callbacks
+  let _openUrlHandler: ((url: string) => void) | null = null;
+
+  export function setOpenUrlHandler(handler: (url: string) => void) {
+    _openUrlHandler = handler;
+  }
+
   export function openUrl(url: string) {
+    if (_openUrlHandler) {
+      _openUrlHandler(url);
+    } else {
+      invokeNative('openUrl', url);
+    }
+  }
+
+  export function openUrlDirect(url: string) {
     invokeNative('openUrl', url);
   }
 

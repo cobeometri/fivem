@@ -608,7 +608,7 @@ void NetLibrary::RunFrame()
 			m_connectionState = CS_DOWNLOADING;
 
 			// trigger task event
-			OnConnectionProgress("Downloading content", 0, 1, false);
+			OnConnectionProgress("Đang tải nội dung", 0, 1, false);
 			OnInitReceived(m_currentServer);
 
 			break;
@@ -618,7 +618,7 @@ void NetLibrary::RunFrame()
 			m_lastConnect = 0;
 			m_connectAttempts = 0;
 
-			OnConnectionProgress("Downloading completed", 1, 1, false);
+			OnConnectionProgress("Tải hoàn tất", 1, 1, false);
 
 			break;
 
@@ -634,7 +634,7 @@ void NetLibrary::RunFrame()
 				// advertise status
 				auto specStatus = (m_connectAttempts > 1) ? fmt::sprintf(" (attempt %d)", m_connectAttempts) : "";
 
-				OnConnectionProgress(fmt::sprintf("Fetching info from server...%s", specStatus), 1, 1, true);
+				OnConnectionProgress(fmt::sprintf("Đang lấy thông tin máy chủ...%s", specStatus), 1, 1, true);
 			}
 
 			if (m_connectAttempts > 3)
@@ -659,7 +659,7 @@ void NetLibrary::RunFrame()
 				// advertise status
 				auto specStatus = (m_connectAttempts > 1) ? fmt::sprintf(" (attempt %d)", m_connectAttempts) : "";
 
-				OnConnectionProgress(fmt::sprintf("Connecting to server...%s", specStatus), 1, 1, false);
+				OnConnectionProgress(fmt::sprintf("Đang kết nối máy chủ...%s", specStatus), 1, 1, false);
 			}
 
 			if (m_connectAttempts > 3)
@@ -1382,7 +1382,7 @@ concurrency::task<void> NetLibrary::ConnectToServer(const std::string& rootUrl)
 
 										policies.clear();
 
-										OnConnectionProgress("Requesting server feature policy...", 0, 100, false);
+										OnConnectionProgress("Đang yêu cầu chính sách máy chủ...", 0, 100, false);
 
 										if (info.is_object() && info["vars"].is_object())
 										{
@@ -1451,7 +1451,7 @@ concurrency::task<void> NetLibrary::ConnectToServer(const std::string& rootUrl)
 							continueAfterAllowance();
 						};
 
-						OnConnectionProgress("Requesting server permissions...", 0, 100, false);
+						OnConnectionProgress("Đang xác minh quyền truy cập...", 0, 100, false);
 
 						HttpRequestOptions options;
 						options.timeoutNoResponse = std::chrono::seconds(5);
@@ -1478,7 +1478,7 @@ concurrency::task<void> NetLibrary::ConnectToServer(const std::string& rootUrl)
 				epMap["method"] = "getEndpoints";
 				epMap["token"] = m_token;
 
-				OnConnectionProgress("Requesting server endpoints...", 0, 100, false);
+				OnConnectionProgress("Đang kết nối đến máy chủ...", 0, 100, false);
 
 				m_httpClient->DoPostRequest(fmt::sprintf("%sclient", url), m_httpClient->BuildPostString(epMap), [rawEndpoints, continueAfterEndpoints](bool success, const char* data, size_t size)
 				{
@@ -1512,7 +1512,7 @@ concurrency::task<void> NetLibrary::ConnectToServer(const std::string& rootUrl)
 
 	performRequest = [=]()
 	{
-		OnConnectionProgress("Handshaking with server...", 0, 100, false);
+		OnConnectionProgress("Đang xác thực với máy chủ...", 0, 100, false);
 
 		HttpRequestOptions options;
 		options.streamingCallback = handleAuthResultData;
@@ -1544,7 +1544,7 @@ concurrency::task<void> NetLibrary::ConnectToServer(const std::string& rootUrl)
 		if (requestSteamTicket == "on")
 		{
 			// DISABLED: Steam limits bypass
-			OnConnectionProgress("Obtaining Steam ticket...", 0, 100, false);
+			OnConnectionProgress("Đang xác thực Steam...", 0, 100, false);
 
 			auto authCallback = [=](std::pair<std::string, std::string> authResult)
 			{
@@ -1571,7 +1571,7 @@ concurrency::task<void> NetLibrary::ConnectToServer(const std::string& rootUrl)
 	
 	auto initiateRequest = [=]()
 	{
-		OnConnectionProgress("Requesting server variables...", 0, 100, true);
+		OnConnectionProgress("Đang tải cấu hình máy chủ...", 0, 100, true);
 
 		HttpRequestOptions options;
 		options.addRawBody = true;

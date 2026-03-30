@@ -23,7 +23,6 @@ const passwordIcon = new URL("assets/images/password-icon.webp", import.meta.url
 
 const schema = yup.object({
   username: yup.string().required("Tên tài khoản không được để trống"),
-  name: yup.string().required("Tên không được để trống"),
   email: yup.string().email("Email không hợp lệ").required("Email không được để trống"),
   password: yup
     .string()
@@ -48,7 +47,6 @@ const Register = observer(() => {
     resolver: yupResolver(schema),
     mode: "all",
     defaultValues: {
-      name: "",
       username: "",
       email: "",
       password: "",
@@ -157,22 +155,6 @@ const Register = observer(() => {
                 type="email"
                 startContent={
                   <Image src={emailIcon} alt="Email" rWidth={16} rHeight={16} />
-                }
-              />
-            )}
-          />
-          <Controller
-            control={control}
-            name="name"
-            render={({ field }) => (
-              <Input
-                label="Họ tên"
-                placeholder="Điền họ tên của bạn..."
-                value={field.value}
-                onChange={field.onChange}
-                error={errors.name?.message}
-                startContent={
-                  <Image src={userIcon} alt="Name" rWidth={16} rHeight={16} />
                 }
               />
             )}

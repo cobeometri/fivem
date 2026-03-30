@@ -98,7 +98,7 @@ const News = observer(() => {
           onClick={() => {
             mpMenu.invokeNative(
               "openUrl",
-              "https://discord.gg/saigoncorner"
+              "https://discord.gg/grandrp"
             );
           }}
         >
@@ -120,7 +120,7 @@ const News = observer(() => {
           onClick={() => {
             mpMenu.invokeNative(
               "openUrl",
-              "https://discord.gg/saigoncorner"
+              "https://discord.gg/grandrp"
             );
           }}
         >
@@ -160,7 +160,7 @@ const News = observer(() => {
           onClick={() => {
             mpMenu.invokeNative(
               "openUrl",
-              "https://discord.gg/saigoncorner"
+              "https://discord.gg/grandrp"
             );
           }}
         >

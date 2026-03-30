@@ -498,7 +498,7 @@ bool Updater_RunUpdate(std::initializer_list<std::string> wantedCachesList)
 		}
 	}
 
-	UI_UpdateText(0, gettext(L"Verifying content...").c_str());
+	UI_UpdateText(0, gettext(L"Đang xác minh dữ liệu...").c_str());
 
 	for (auto& filePair : queuedFiles)
 	{
@@ -532,7 +532,7 @@ bool Updater_RunUpdate(std::initializer_list<std::string> wantedCachesList)
 		}
 	}
 
-	UI_UpdateText(0, va(gettext(L"Updating %s..."), PRODUCT_NAME));
+	UI_UpdateText(0, va(gettext(L"Đang cập nhật %s..."), PRODUCT_NAME));
 
 	bool retval = DL_RunLoop();
 
@@ -653,7 +653,7 @@ bool CheckFileOutdatedWithUI(const wchar_t* fileName, const std::vector<std::arr
 		// fileOutdated defaults to true, so we can safely skip the check
 		if (shouldCheck)
 		{
-			UI_UpdateText(1, va(gettext(L"Checking %s"), &fileName[fileNameOffset]));
+			UI_UpdateText(1, va(gettext(L"Đang kiểm tra %s"), &fileName[fileNameOffset]));
 
 			LARGE_INTEGER fileSize;
 			GetFileSizeEx(hFile, &fileSize);

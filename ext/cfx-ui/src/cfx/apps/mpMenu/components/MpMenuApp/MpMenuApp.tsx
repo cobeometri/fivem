@@ -1,5 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Box as BoxBase, Image, Text } from "lr-components";
 import { observer } from "mobx-react-lite";
 import { Outlet, useNavigate } from "react-router-dom";
@@ -16,6 +16,7 @@ import { IServersConnectService } from "cfx/common/services/servers/serversConne
 
 import { useLauncherService } from "../../services/launcher/launcher.service";
 import NotificationComponent from "../../parts/Notification/NotificationComponent";
+import { ExternalLinkDialog, externalLinkState } from "../../parts/ExternalLinkDialog/ExternalLinkDialog";
 import { useService } from 'cfx/base/servicesContainer';
 import { ISettingsUIService } from 'cfx/common/services/settings/settings.service';
 import { useEventHandler } from 'cfx/common/services/analytics/analytics.service';
@@ -43,11 +44,42 @@ export const MpMenuApp = observer(function MpMenuApp() {
   const eventHandler = useEventHandler();
 
   const [showMenu, setShowMenu] = useState<boolean>(false);
+  const [showAvatarInput, setShowAvatarInput] = useState<boolean>(false);
+  const [avatarUrl, setAvatarUrl] = useState<string>(localStorage.getItem("grandrp_avatar") || "");
+  const [avatarInput, setAvatarInput] = useState<string>("");
+
+  const userAvatarSrc = avatarUrl || (LauncherService?.user ? userAvatar : defaultAvatar);
+
+  const saveAvatar = () => {
+    const url = avatarInput.trim();
+    if (url) {
+      localStorage.setItem("grandrp_avatar", url);
+      setAvatarUrl(url);
+    } else {
+      localStorage.removeItem("grandrp_avatar");
+      setAvatarUrl("");
+    }
+    setShowAvatarInput(false);
+    setAvatarInput("");
+  };
 
   const userData = LauncherService?.user;
   const addNotification = LauncherService?.addNotification;
   const serverList = LauncherService?.servers;
+  const loading = LauncherService?.loading;
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !userData) {
+      navigate("/login");
+    }
+  }, [loading, userData]);
+
+  useEffect(() => {
+    mpMenu.setOpenUrlHandler((url: string) => {
+      externalLinkState.show(url);
+    });
+  }, []);
 
   const handleSettingsClick = useCallback(() => {
     SettingsUIService.open();
@@ -70,6 +102,93 @@ export const MpMenuApp = observer(function MpMenuApp() {
 
       <LegacyConnectingModal />
       <LegacyUiMessageModal />
+      <ExternalLinkDialog />
+
+      {/* Avatar URL Dialog */}
+      <AnimatePresence>
+        {showAvatarInput && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: "fixed", inset: 0, zIndex: 9999,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)",
+            }}
+            onClick={() => setShowAvatarInput(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: 420,
+                background: "linear-gradient(180deg, #1A1B1F 0%, #111214 100%)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 16, padding: 28,
+                display: "flex", flexDirection: "column", gap: 16,
+              }}
+            >
+              <div style={{ color: "#fff", fontSize: 16, fontWeight: 600 }}>
+                Đổi avatar
+              </div>
+              {avatarInput && (
+                <img
+                  src={avatarInput}
+                  alt="Preview"
+                  style={{
+                    width: 80, height: 80, borderRadius: "50%",
+                    objectFit: "cover", alignSelf: "center",
+                    border: "2px solid rgba(241,152,0,0.5)",
+                  }}
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                />
+              )}
+              <input
+                type="text"
+                value={avatarInput}
+                onChange={(e) => setAvatarInput(e.target.value)}
+                placeholder="Dán link hình ảnh (URL)..."
+                style={{
+                  width: "100%", padding: "10px 14px", borderRadius: 10,
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  background: "rgba(255,255,255,0.04)", color: "#fff",
+                  fontSize: 13, outline: "none",
+                }}
+              />
+              <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11 }}>
+                Để trống để dùng avatar mặc định
+              </div>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button
+                  onClick={() => setShowAvatarInput(false)}
+                  style={{
+                    flex: 1, padding: "10px 0", borderRadius: 10,
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    background: "transparent", color: "rgba(255,255,255,0.6)",
+                    fontSize: 14, cursor: "pointer",
+                  }}
+                >
+                  Huỷ
+                </button>
+                <button
+                  onClick={saveAvatar}
+                  style={{
+                    flex: 1, padding: "10px 0", borderRadius: 10,
+                    border: "none",
+                    background: "linear-gradient(180deg, #F19800 0%, #EC6B14 100%)",
+                    color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer",
+                  }}
+                >
+                  Lưu
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <Box
         className="w-screen h-screen flex items-center relative"
@@ -223,8 +342,8 @@ export const MpMenuApp = observer(function MpMenuApp() {
             }}
           >
             <Image
-              src={LauncherService?.user ? userAvatar : defaultAvatar}
-              alt="Default Avatar"
+              src={userAvatarSrc}
+              alt="User Avatar"
               className="size-full object-cover"
               draggable={false}
             />
@@ -272,6 +391,21 @@ export const MpMenuApp = observer(function MpMenuApp() {
                         Đổi mật khẩu
                       </Text>
                     </Box>
+                    <Box
+                      className="w-full bg-[#00000080] group hover:bg-[#595959] transition-all duration-300 flex items-center justify-center cursor-pointer"
+                      rHeight={34}
+                      rBorderRadius={8}
+                      rMargin={[0, 0, 6, 0]}
+                      onClick={() => {
+                        setShowAvatarInput(true);
+                        setShowMenu(false);
+                        setAvatarInput(avatarUrl);
+                      }}
+                    >
+                      <Text className="text-[#ffffff80] font-normal group-hover:text-[#FDCA70] transition-all duration-300" rFontSize={16}>
+                        Đổi avatar
+                      </Text>
+                    </Box>
                     {LauncherService?.user?.role === "admin" && (
                       <Box
                         className="w-full bg-[#00000080] group hover:bg-[#595959] transition-all duration-300 flex items-center justify-center cursor-pointer"
@@ -311,7 +445,7 @@ export const MpMenuApp = observer(function MpMenuApp() {
               rWidth={48}
               rHeight={48}
               onClick={() => {
-                mpMenu.invokeNative("openUrl", "https://discord.gg/saigoncorner");
+                mpMenu.invokeNative("openUrl", "https://discord.gg/grandrp");
               }}
             />
             <Image
@@ -321,7 +455,7 @@ export const MpMenuApp = observer(function MpMenuApp() {
               rWidth={48}
               rHeight={48}
               onClick={() => {
-                mpMenu.invokeNative("openUrl", "https://www.facebook.com/anhat.adminsss/");
+                mpMenu.invokeNative("openUrl", "https://www.facebook.com/cobeometri/");
               }}
             />
           </Box>
@@ -356,7 +490,7 @@ export const MpMenuApp = observer(function MpMenuApp() {
                 mpMenu.invokeNative(
                   "openUrl",
                   globalData?.fanpage_url ||
-                    "https://www.facebook.com/anhat.adminsss/"
+                    "https://www.facebook.com/cobeometri/"
                 );
               }}
             />
@@ -369,7 +503,7 @@ export const MpMenuApp = observer(function MpMenuApp() {
                 mpMenu.invokeNative(
                   "openUrl",
                   globalData?.discord_url ||
-                    "https://www.facebook.com/anhat.adminsss/"
+                    "https://www.facebook.com/cobeometri/"
                 );
               }}
             />
@@ -382,7 +516,7 @@ export const MpMenuApp = observer(function MpMenuApp() {
                 mpMenu.invokeNative(
                   "openUrl",
                   globalData?.youtube_url ||
-                    "https://www.facebook.com/anhat.adminsss/"
+                    "https://www.facebook.com/cobeometri/"
                 );
               }}
             />
@@ -395,7 +529,7 @@ export const MpMenuApp = observer(function MpMenuApp() {
                 mpMenu.invokeNative(
                   "openUrl",
                   globalData?.tiktok_url ||
-                    "https://www.facebook.com/anhat.adminsss/"
+                    "https://www.facebook.com/cobeometri/"
                 );
               }}
             />

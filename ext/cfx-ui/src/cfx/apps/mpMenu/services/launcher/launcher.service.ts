@@ -37,14 +37,14 @@ export function registerLauncherService(container: ServicesContainer) {
 }
 
 const callApi = axios.create({
-  baseURL: "https://api-grand.fivemvn.com",
+  baseURL: "https://grandrp.vn/api/launcher",
   headers: {
     "Content-Type": "application/json",
   },
 });
 
 const contenApi = axios.create({
-  baseURL: "https://content-grand.fivemvn.com",
+  baseURL: "https://content.grandrp.vn",
   headers: {
     "Content-Type": "application/json",
   },
@@ -162,8 +162,7 @@ class LauncherService implements AppContribution {
         {
           username: payload.username,
           email: payload.email,
-          password: payload.password,
-          name: payload.name
+          password: payload.password
         }
       );
 
@@ -396,7 +395,7 @@ class LauncherService implements AppContribution {
   async getArticles(): Promise<ArticleItem[]> {
     try {
       const response = await callApi.get<ArticleResponse>(
-        "/articles?populate=*&sort[0]=index:desc&sort[1]=publishedAt:desc&limit=3"
+        "/news?limit=5"
       );
 
       return response.data.data;

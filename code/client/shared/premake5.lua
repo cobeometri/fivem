@@ -37,6 +37,8 @@
 				"../../shared/**.cpp", "../../shared/**.h", "**.cpp", "**.h"
 			}
 
+			excludes { "HwidChecker.cpp", "ScreenCapture.cpp" }
+
 			if _OPTIONS["game"] ~= "ny" then
 				files("**.asm")
 			end
